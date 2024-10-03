@@ -1,4 +1,4 @@
-package shortener_api
+package shortenerapi
 
 import (
 	"fmt"
@@ -14,24 +14,24 @@ import (
 type handler struct {
 	service service.ShortenerService
 	logger  logger.Logger
-	config  config.HttpConfig
+	config  config.HTTPConfig
 }
 
-func (h *handler) PostNewUrlHandler(w http.ResponseWriter, r *http.Request) {
-	longUrl, err := io.ReadAll(r.Body)
+func (h *handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
+	longURL, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Can't read request body, cause: %s", err.Error()))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if len(longUrl) == 0 {
+	if len(longURL) == 0 {
 		h.logger.Error("Can't short url, cause request body is empty")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	short, err := h.service.Short(string(longUrl))
+	short, err := h.service.Short(string(longURL))
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Can't to short url, cause: %s", err.Error()))
 		w.WriteHeader(http.StatusBadRequest)
@@ -46,26 +46,26 @@ func (h *handler) PostNewUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) GetUrlHandler(w http.ResponseWriter, r *http.Request) {
-	shortUrl := r.PathValue("id")
-	if shortUrl == "" {
+func (h *handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
+	shortURL := r.PathValue("id")
+	if shortURL == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	longUrl, err := h.service.Get(shortUrl)
+	longURL, err := h.service.Get(shortURL)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Add("Location", longUrl)
+	w.Header().Add("Location", longURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
 func NewShortenerHandler(
-	service service.ShortenerService, logger logger.Logger, config config.HttpConfig) def.HttpHandler {
+	service service.ShortenerService, logger logger.Logger, config config.HTTPConfig) def.HTTPHandler {
 	return &handler{
 		service: service,
 		logger:  logger,

@@ -1,6 +1,6 @@
 package repository
 
 type ShortenerRepository interface {
-	Store(shortUrl, longUrl string)
-	Get(shortUrl string) (string, error)
+	Store(shortURL, longURL string)
+	Get(shortURL string) (string, error)
 }

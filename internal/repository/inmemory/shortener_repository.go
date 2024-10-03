@@ -1,7 +1,8 @@
-package in_memory
+package inmemory
 
 import (
 	"fmt"
+
 	"github.com/Makovey/shortener/internal/repository"
 )
 
@@ -9,21 +10,21 @@ type repo struct {
 	storage map[string]string
 }
 
-func (r *repo) Store(shortUrl, longUrl string) {
+func (r *repo) Store(shortURL, longURL string) {
 	if r.storage == nil {
 		r.storage = make(map[string]string)
 	}
 
-	r.storage[shortUrl] = longUrl
+	r.storage[shortURL] = longURL
 }
 
-func (r *repo) Get(shortUrl string) (string, error) {
-	longUrl, ok := r.storage[shortUrl]
+func (r *repo) Get(shortURL string) (string, error) {
+	longURL, ok := r.storage[shortURL]
 	if !ok {
-		return "", fmt.Errorf("long url by -> %s not found", shortUrl)
+		return "", fmt.Errorf("long url by -> %s not found", shortURL)
 	}
 
-	return longUrl, nil
+	return longURL, nil
 }
 
 func NewRepositoryInMemory() repository.ShortenerRepository {

@@ -2,7 +2,7 @@ package api
 
 import "net/http"
 
-type HttpHandler interface {
-	PostNewUrlHandler(w http.ResponseWriter, r *http.Request)
-	GetUrlHandler(w http.ResponseWriter, r *http.Request)
+type HTTPHandler interface {
+	PostNewURLHandler(w http.ResponseWriter, r *http.Request)
+	GetURLHandler(w http.ResponseWriter, r *http.Request)
 }

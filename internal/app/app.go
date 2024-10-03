@@ -11,18 +11,18 @@ func NewApp() *App {
 }
 
 func (a *App) Run() error {
-	return a.runHttpServer()
+	return a.runHTTPServer()
 }
 
 func (a *App) initRoutes() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /", a.dependencyProvider.HttpHandler().PostNewUrlHandler)
-	mux.HandleFunc("GET /{id}", a.dependencyProvider.HttpHandler().GetUrlHandler)
+	mux.HandleFunc("POST /", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
+	mux.HandleFunc("GET /{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
 
 	return mux
 }
 
-func (a *App) runHttpServer() error {
+func (a *App) runHTTPServer() error {
 	cfg := a.dependencyProvider.Config()
 
 	return http.ListenAndServe(cfg.Port(), a.initRoutes())

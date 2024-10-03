@@ -2,7 +2,7 @@ package config
 
 const defaultPort = ":8080"
 
-type HttpConfig interface {
+type HTTPConfig interface {
 	Port() string
 }
 
@@ -14,7 +14,7 @@ func (cfg *httpConfig) Port() string {
 	return cfg.port
 }
 
-func NewHttpConfig() HttpConfig {
+func NewHTTPConfig() HTTPConfig {
 	return &httpConfig{
 		port: defaultPort,
 	}

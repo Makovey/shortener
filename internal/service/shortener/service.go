@@ -13,17 +13,17 @@ type service struct {
 }
 
 func (s *service) Short(url string) (string, error) {
-	shortUrl := s.generateShortUrl(url)[:7]
-	s.repo.Store(shortUrl, url)
+	shortURL := s.generateShortURL(url)[:7]
+	s.repo.Store(shortURL, url)
 
-	return shortUrl, nil
+	return shortURL, nil
 }
 
-func (s *service) Get(shortUrl string) (string, error) {
-	return s.repo.Get(shortUrl)
+func (s *service) Get(shortURL string) (string, error) {
+	return s.repo.Get(shortURL)
 }
 
-func (s *service) generateShortUrl(url string) string {
+func (s *service) generateShortURL(url string) string {
 	h := md5.New()
 	h.Write([]byte(url))
 
