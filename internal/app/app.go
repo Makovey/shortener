@@ -1,6 +1,11 @@
 package app
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+)
 
 type App struct {
 	dependencyProvider *dependencyProvider
@@ -15,11 +20,12 @@ func (a *App) Run() error {
 }
 
 func (a *App) initRoutes() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
-	mux.HandleFunc("GET /{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
+	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
 
-	return mux
+	return r
 }
 
 func (a *App) runHTTPServer() error {
