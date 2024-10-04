@@ -22,10 +22,26 @@ func (cfg *httpConfig) BaseReturnedURL() string {
 }
 
 func NewHTTPConfig() HTTPConfig {
+	var addr string
+	var baseReturnedURL string
+
+	envCfg := newEnvConfig()
 	flags := newFlagsValue()
 
+	if envAddr := envCfg.Addr; envAddr != "" {
+		addr = envAddr
+	} else {
+		addr = flags.addr
+	}
+
+	if envBase := envCfg.BaseReturnedURL; envBase != "" {
+		baseReturnedURL = envBase
+	} else {
+		baseReturnedURL = flags.baseReturnedURL
+	}
+
 	return &httpConfig{
-		addr:            flags.addr,
-		baseReturnedURL: flags.baseReturnedURL,
+		addr:            addr,
+		baseReturnedURL: baseReturnedURL,
 	}
 }
