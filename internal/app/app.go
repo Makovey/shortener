@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -30,6 +31,7 @@ func (a *App) initRoutes() http.Handler {
 
 func (a *App) runHTTPServer() error {
 	cfg := a.dependencyProvider.Config()
+	a.dependencyProvider.Logger().Info(fmt.Sprintf("starting http server on -> %s", cfg.Addr()))
 
-	return http.ListenAndServe(cfg.Port(), a.initRoutes())
+	return http.ListenAndServe(cfg.Addr(), a.initRoutes())
 }

@@ -2,4 +2,4 @@ BINARY_NAME=shortener
 
 remote_test:
 	go build -o cmd/shortener/${BINARY_NAME} cmd/shortener/*.go
-	./shortenertest -test.v -test.run=^TestIteration3$$ -source-path=cmd/shortener/${BINARY_NAME}
+	./shortenertest -test.v -test.run=^TestIteration4$$ -source-path=cmd/shortener/${BINARY_NAME} -binary-path=cmd/shortener/${BINARY_NAME}

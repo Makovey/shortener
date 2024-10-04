@@ -1,21 +1,31 @@
 package config
 
-const defaultPort = ":8080"
-
+// HTTPConfig methods:
+// Addr - returned address of launching server
+// BaseReturnedURL - returned base url in response when url is shorted
 type HTTPConfig interface {
-	Port() string
+	Addr() string
+	BaseReturnedURL() string
 }
 
 type httpConfig struct {
-	port string
+	addr            string
+	baseReturnedURL string
 }
 
-func (cfg *httpConfig) Port() string {
-	return cfg.port
+func (cfg *httpConfig) Addr() string {
+	return cfg.addr
+}
+
+func (cfg *httpConfig) BaseReturnedURL() string {
+	return cfg.baseReturnedURL
 }
 
 func NewHTTPConfig() HTTPConfig {
+	flags := newFlagsValue()
+
 	return &httpConfig{
-		port: defaultPort,
+		addr:            flags.addr,
+		baseReturnedURL: flags.baseReturnedURL,
 	}
 }

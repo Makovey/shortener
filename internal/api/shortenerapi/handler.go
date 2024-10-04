@@ -39,7 +39,7 @@ func (h *handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write([]byte(fmt.Sprintf("http://localhost%s/%s", h.config.Port(), short)))
+	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
