@@ -3,20 +3,19 @@ package shortener
 import (
 	"crypto/md5"
 	"encoding/hex"
-
-	repo "github.com/Makovey/shortener/internal/repository"
-	def "github.com/Makovey/shortener/internal/service"
+	def "github.com/Makovey/shortener/internal/api"
+	repo "github.com/Makovey/shortener/internal/service"
 )
 
 type service struct {
-	repo repo.ShortenerRepository
+	repo repo.Shortener
 }
 
-func (s *service) Short(url string) (string, error) {
+func (s *service) Short(url string) string {
 	shortURL := s.generateShortURL(url)[:7]
 	s.repo.Store(shortURL, url)
 
-	return shortURL, nil
+	return shortURL
 }
 
 func (s *service) Get(shortURL string) (string, error) {
@@ -30,6 +29,6 @@ func (s *service) generateShortURL(url string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func NewShortenerService(shortenerRepo repo.ShortenerRepository) def.ShortenerService {
+func NewShortenerService(shortenerRepo repo.Shortener) def.Shortener {
 	return &service{repo: shortenerRepo}
 }

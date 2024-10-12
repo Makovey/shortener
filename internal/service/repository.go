@@ -1,6 +1,6 @@
-package repository
+package service
 
-type ShortenerRepository interface {
+type Shortener interface {
 	Store(shortURL, longURL string)
 	Get(shortURL string) (string, error)
 }

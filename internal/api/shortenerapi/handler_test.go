@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/logger/stdout"
-	"github.com/Makovey/shortener/internal/service"
 	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
@@ -26,7 +26,7 @@ func (errReader) Read(p []byte) (n int, err error) {
 
 func TestPostNewURLHandler(t *testing.T) {
 	type dependencies struct {
-		service service.ShortenerService
+		service api.Shortener
 		logger  logger.Logger
 		config  config.HTTPConfig
 	}
@@ -77,21 +77,6 @@ func TestPostNewURLHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "failed post new url: error from service",
-			dependencies: dependencies{
-				service: shortener.NewMockService(true),
-				logger:  stdout.NewLoggerStdout(),
-				config:  config.NewHTTPConfig(),
-			},
-			parameters: parameters{
-				body: strings.NewReader("https://github.com"),
-			},
-			want: want{
-				code:      http.StatusBadRequest,
-				emptyBody: true,
-			},
-		},
-		{
 			name: "failed post new url: error with reader",
 			dependencies: dependencies{
 				service: shortener.NewMockService(true),
@@ -131,7 +116,7 @@ func TestPostNewURLHandler(t *testing.T) {
 
 func Test_handler_GetURLHandler(t *testing.T) {
 	type dependencies struct {
-		service service.ShortenerService
+		service api.Shortener
 		logger  logger.Logger
 		config  config.HTTPConfig
 	}

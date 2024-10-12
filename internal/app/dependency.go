@@ -6,7 +6,6 @@ import (
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/logger/stdout"
-	"github.com/Makovey/shortener/internal/repository"
 	"github.com/Makovey/shortener/internal/repository/inmemory"
 	"github.com/Makovey/shortener/internal/service"
 	"github.com/Makovey/shortener/internal/service/shortener"
@@ -17,8 +16,8 @@ type dependencyProvider struct {
 	config       config.HTTPConfig
 	logger       logger.Logger
 
-	shortRepo repository.ShortenerRepository
-	shorSrv   service.ShortenerService
+	shortRepo service.Shortener
+	shorSrv   api.Shortener
 }
 
 func newDependencyProvider() *dependencyProvider {
@@ -41,7 +40,7 @@ func (p *dependencyProvider) Logger() logger.Logger {
 	return p.logger
 }
 
-func (p *dependencyProvider) ShortenerRepository() repository.ShortenerRepository {
+func (p *dependencyProvider) ShortenerRepository() service.Shortener {
 	if p.shortRepo == nil {
 		p.shortRepo = inmemory.NewRepositoryInMemory()
 	}
@@ -49,7 +48,7 @@ func (p *dependencyProvider) ShortenerRepository() repository.ShortenerRepositor
 	return p.shortRepo
 }
 
-func (p *dependencyProvider) ShortenerService() service.ShortenerService {
+func (p *dependencyProvider) ShortenerService() api.Shortener {
 	if p.shorSrv == nil {
 		p.shorSrv = shortener.NewShortenerService(p.ShortenerRepository())
 	}

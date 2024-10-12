@@ -8,11 +8,10 @@ import (
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
-	"github.com/Makovey/shortener/internal/service"
 )
 
 type handler struct {
-	service service.ShortenerService
+	service def.Shortener
 	logger  logger.Logger
 	config  config.HTTPConfig
 }
@@ -31,13 +30,7 @@ func (h *handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(string(longURL))
-	if err != nil {
-		h.logger.Error(fmt.Sprintf("Can't to short url, cause: %s", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
+	short := h.service.Short(string(longURL))
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)))
 	if err != nil {
@@ -65,7 +58,7 @@ func (h *handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewShortenerHandler(
-	service service.ShortenerService, logger logger.Logger, config config.HTTPConfig) def.HTTPHandler {
+	service def.Shortener, logger logger.Logger, config config.HTTPConfig) def.HTTPHandler {
 	return &handler{
 		service: service,
 		logger:  logger,

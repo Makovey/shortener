@@ -2,8 +2,7 @@ package inmemory
 
 import (
 	"fmt"
-
-	"github.com/Makovey/shortener/internal/repository"
+	"github.com/Makovey/shortener/internal/service"
 )
 
 type repo struct {
@@ -27,6 +26,6 @@ func (r *repo) Get(shortURL string) (string, error) {
 	return longURL, nil
 }
 
-func NewRepositoryInMemory() repository.ShortenerRepository {
+func NewRepositoryInMemory() service.Shortener {
 	return &repo{}
 }
