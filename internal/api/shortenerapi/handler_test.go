@@ -50,7 +50,7 @@ func TestPostNewURLHandler(t *testing.T) {
 			name: "successful post new url",
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerStdout(),
+				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewHTTPConfig(),
 			},
 			parameters: parameters{
@@ -65,7 +65,7 @@ func TestPostNewURLHandler(t *testing.T) {
 			name: "failed post new url: empty body",
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerStdout(),
+				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewHTTPConfig(),
 			},
 			parameters: parameters{
@@ -80,7 +80,7 @@ func TestPostNewURLHandler(t *testing.T) {
 			name: "failed post new url: error with reader",
 			dependencies: dependencies{
 				service: shortener.NewMockService(true),
-				logger:  stdout.NewLoggerStdout(),
+				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewHTTPConfig(),
 			},
 			parameters: parameters{
@@ -140,7 +140,7 @@ func Test_handler_GetURLHandler(t *testing.T) {
 			name: "successful get url",
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerStdout(),
+				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewHTTPConfig(),
 			},
 			parameters: parameters{
@@ -155,7 +155,7 @@ func Test_handler_GetURLHandler(t *testing.T) {
 			name: "failed get long url: empty path value",
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerStdout(),
+				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewHTTPConfig(),
 			},
 			parameters: parameters{
@@ -170,7 +170,7 @@ func Test_handler_GetURLHandler(t *testing.T) {
 			name: "failed get long url: error from service",
 			dependencies: dependencies{
 				service: shortener.NewMockService(true),
-				logger:  stdout.NewLoggerStdout(),
+				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewHTTPConfig(),
 			},
 			parameters: parameters{

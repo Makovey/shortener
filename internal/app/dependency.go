@@ -34,7 +34,7 @@ func (p *dependencyProvider) HTTPHandler() api.HTTPHandler {
 
 func (p *dependencyProvider) Logger() logger.Logger {
 	if p.logger == nil {
-		p.logger = stdout.NewLoggerStdout()
+		p.logger = stdout.NewLoggerStdout("local") // TODO: Add env deployment config
 	}
 
 	return p.logger
