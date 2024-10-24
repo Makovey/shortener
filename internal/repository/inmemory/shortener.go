@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"fmt"
+
 	"github.com/Makovey/shortener/internal/service"
 )
 

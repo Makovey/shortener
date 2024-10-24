@@ -1,6 +1,7 @@
 package shortenerapi
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -114,7 +115,7 @@ func TestPostNewURLHandler(t *testing.T) {
 	}
 }
 
-func Test_handler_GetURLHandler(t *testing.T) {
+func TestGetURLHandler(t *testing.T) {
 	type dependencies struct {
 		service api.Shortener
 		logger  logger.Logger
@@ -199,4 +200,141 @@ func Test_handler_GetURLHandler(t *testing.T) {
 			assert.Equal(t, tt.want.location, res.Header.Get("Location"))
 		})
 	}
+}
+
+func TestPostApiShortenHandler(t *testing.T) {
+	type dependencies struct {
+		service api.Shortener
+		logger  logger.Logger
+		config  config.HTTPConfig
+	}
+
+	type want struct {
+		code         int
+		containsBody string
+	}
+
+	type parameters struct {
+		body io.Reader
+	}
+
+	tests := []struct {
+		name         string
+		dependencies dependencies
+		parameters   parameters
+		want         want
+	}{
+		{
+			name: "successful post api shorten",
+			dependencies: dependencies{
+				service: shortener.NewMockService(false),
+				logger:  stdout.NewLoggerStdoutMock(),
+				config:  config.NewHTTPConfig(),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": "https://github.com",
+				})),
+			},
+			want: want{
+				code:         http.StatusCreated,
+				containsBody: "result",
+			},
+		},
+		{
+			name: "successful post api shorten",
+			dependencies: dependencies{
+				service: shortener.NewMockService(false),
+				logger:  stdout.NewLoggerStdoutMock(),
+				config:  config.NewHTTPConfig(),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": "https://github.com",
+				})),
+			},
+			want: want{
+				code:         http.StatusCreated,
+				containsBody: "result",
+			},
+		},
+		{
+			name: "failed post new url: error with reader",
+			dependencies: dependencies{
+				service: shortener.NewMockService(true),
+				logger:  stdout.NewLoggerStdoutMock(),
+				config:  config.NewHTTPConfig(),
+			},
+			parameters: parameters{
+				body: errReader(0),
+			},
+			want: want{
+				code:         http.StatusInternalServerError,
+				containsBody: "error",
+			},
+		},
+		{
+			name: "failed post new url: invalid body",
+			dependencies: dependencies{
+				service: shortener.NewMockService(false),
+				logger:  stdout.NewLoggerStdoutMock(),
+				config:  config.NewHTTPConfig(),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": 1234567890,
+				})),
+			},
+			want: want{
+				code:         http.StatusBadRequest,
+				containsBody: "error",
+			},
+		},
+		{
+			name: "failed post new url: empty body",
+			dependencies: dependencies{
+				service: shortener.NewMockService(false),
+				logger:  stdout.NewLoggerStdoutMock(),
+				config:  config.NewHTTPConfig(),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": "",
+				})),
+			},
+			want: want{
+				code:         http.StatusBadRequest,
+				containsBody: "error",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := NewShortenerHandler(tt.dependencies.service, tt.dependencies.logger, tt.dependencies.config)
+
+			r := httptest.NewRequest(http.MethodPost, "/api/shorten", tt.parameters.body)
+
+			w := httptest.NewRecorder()
+			h.PostShortenURLHandler(w, r)
+
+			res := w.Result()
+			defer res.Body.Close()
+
+			assert.Equal(t, tt.want.code, res.StatusCode)
+			assert.Contains(t, parseBody(res.Body), tt.want.containsBody)
+		})
+	}
+}
+
+func makeJSON(data map[string]any) string {
+	bytes, _ := json.Marshal(data)
+	return string(bytes)
+}
+
+func parseBody(body io.Reader) map[string]any {
+	b, _ := io.ReadAll(body)
+	bodyMap := make(map[string]any)
+	_ = json.Unmarshal(b, &bodyMap)
+	return bodyMap
 }

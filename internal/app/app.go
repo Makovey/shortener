@@ -26,7 +26,9 @@ func (a *App) initRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.NewMiddlewareLogger(a.dependencyProvider.Logger()).Logger)
 	r.Use(chiMiddleware.Recoverer)
+
 	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
+	r.Post("/api/shorten", a.dependencyProvider.HTTPHandler().PostShortenURLHandler)
 	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
 
 	return r
