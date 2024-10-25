@@ -24,7 +24,8 @@ func (a *App) Run() {
 
 func (a *App) initRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.NewMiddlewareLogger(a.dependencyProvider.Logger()).Logger)
+	r.Use(middleware.NewLogger(a.dependencyProvider.Logger()).Logger)
+	r.Use(middleware.NewCompressor().Compress)
 	r.Use(chiMiddleware.Recoverer)
 
 	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURLHandler)

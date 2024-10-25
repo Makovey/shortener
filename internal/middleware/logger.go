@@ -30,7 +30,7 @@ func (l Logger) Logger(next http.Handler) http.Handler {
 	})
 }
 
-func NewMiddlewareLogger(log logger.Logger) Logger {
+func NewLogger(log logger.Logger) Logger {
 	return Logger{log: log}
 }
 

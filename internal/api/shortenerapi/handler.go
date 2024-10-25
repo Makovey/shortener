@@ -8,8 +8,8 @@ import (
 
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/config"
-	model "github.com/Makovey/shortener/internal/dto/handler"
 	"github.com/Makovey/shortener/internal/logger"
+	model "github.com/Makovey/shortener/internal/model/handler"
 )
 
 type handler struct {
