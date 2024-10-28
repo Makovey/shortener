@@ -6,14 +6,14 @@ import (
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/logger/stdout"
-	"github.com/Makovey/shortener/internal/repository/inmemory"
+	"github.com/Makovey/shortener/internal/repository/file"
 	"github.com/Makovey/shortener/internal/service"
 	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
 type dependencyProvider struct {
 	shortHandler api.HTTPHandler
-	config       config.HTTPConfig
+	config       config.Config
 	logger       logger.Logger
 
 	shortRepo service.Shortener
@@ -42,7 +42,7 @@ func (p *dependencyProvider) Logger() logger.Logger {
 
 func (p *dependencyProvider) ShortenerRepository() service.Shortener {
 	if p.shortRepo == nil {
-		p.shortRepo = inmemory.NewRepositoryInMemory()
+		p.shortRepo = file.NewFileStorage(p.config.FileStoragePath(), p.Logger())
 	}
 
 	return p.shortRepo
@@ -56,9 +56,9 @@ func (p *dependencyProvider) ShortenerService() api.Shortener {
 	return p.shorSrv
 }
 
-func (p *dependencyProvider) Config() config.HTTPConfig {
+func (p *dependencyProvider) Config() config.Config {
 	if p.config == nil {
-		p.config = config.NewHTTPConfig()
+		p.config = config.NewConfig()
 	}
 
 	return p.config

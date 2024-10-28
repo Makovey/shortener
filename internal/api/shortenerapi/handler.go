@@ -15,7 +15,7 @@ import (
 type handler struct {
 	service def.Shortener
 	logger  logger.Logger
-	config  config.HTTPConfig
+	config  config.Config
 }
 
 func (h handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +52,7 @@ func (h handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
 	longURL, err := h.service.Get(shortURL)
 	if err != nil {
 		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		h.writeResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -89,7 +89,7 @@ func (h handler) PostShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewShortenerHandler(
-	service def.Shortener, logger logger.Logger, config config.HTTPConfig,
+	service def.Shortener, logger logger.Logger, config config.Config,
 ) def.HTTPHandler {
 	return &handler{
 		service: service,

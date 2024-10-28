@@ -29,7 +29,7 @@ func TestPostNewURLHandler(t *testing.T) {
 	type dependencies struct {
 		service api.Shortener
 		logger  logger.Logger
-		config  config.HTTPConfig
+		config  config.Config
 	}
 
 	type want struct {
@@ -52,7 +52,7 @@ func TestPostNewURLHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: strings.NewReader("https://github.com"),
@@ -67,7 +67,7 @@ func TestPostNewURLHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(""),
@@ -82,7 +82,7 @@ func TestPostNewURLHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(true),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: errReader(0),
@@ -119,7 +119,7 @@ func TestGetURLHandler(t *testing.T) {
 	type dependencies struct {
 		service api.Shortener
 		logger  logger.Logger
-		config  config.HTTPConfig
+		config  config.Config
 	}
 
 	type want struct {
@@ -142,7 +142,7 @@ func TestGetURLHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				pathValue: "/a1b2c3",
@@ -157,7 +157,7 @@ func TestGetURLHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				pathValue: "",
@@ -172,7 +172,7 @@ func TestGetURLHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(true),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				pathValue: "/a1b2c3",
@@ -206,7 +206,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 	type dependencies struct {
 		service api.Shortener
 		logger  logger.Logger
-		config  config.HTTPConfig
+		config  config.Config
 	}
 
 	type want struct {
@@ -229,7 +229,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -246,7 +246,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -263,7 +263,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(true),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: errReader(0),
@@ -278,7 +278,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -295,7 +295,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 			dependencies: dependencies{
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
-				config:  config.NewHTTPConfig(),
+				config:  config.NewConfig(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{

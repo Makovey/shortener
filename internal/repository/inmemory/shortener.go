@@ -10,12 +10,14 @@ type repo struct {
 	storage map[string]string
 }
 
-func (r *repo) Store(shortURL, longURL string) {
+func (r *repo) Store(shortURL, longURL string) error {
 	if r.storage == nil {
 		r.storage = make(map[string]string)
 	}
 
 	r.storage[shortURL] = longURL
+
+	return nil
 }
 
 func (r *repo) Get(shortURL string) (string, error) {
