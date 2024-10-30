@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+
+	"github.com/Makovey/shortener/internal/middleware"
 )
 
 type App struct {
@@ -16,22 +18,28 @@ func NewApp() *App {
 	return &App{dependencyProvider: newDependencyProvider()}
 }
 
-func (a *App) Run() error {
-	return a.runHTTPServer()
+func (a *App) Run() {
+	a.runHTTPServer()
 }
 
-func (a *App) initRoutes() http.Handler {
+func (a *App) initRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(middleware.NewLogger(a.dependencyProvider.Logger()).Logger)
+	r.Use(middleware.NewCompressor().Compress)
+	r.Use(chiMiddleware.Recoverer)
+
 	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
+	r.Post("/api/shorten", a.dependencyProvider.HTTPHandler().PostShortenURLHandler)
 	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
 
 	return r
 }
 
-func (a *App) runHTTPServer() error {
+func (a *App) runHTTPServer() {
 	cfg := a.dependencyProvider.Config()
 	a.dependencyProvider.Logger().Info(fmt.Sprintf("starting http server on -> %s", cfg.Addr()))
 
-	return http.ListenAndServe(cfg.Addr(), a.initRoutes())
+	if err := http.ListenAndServe(cfg.Addr(), a.initRouter()); err != nil {
+		a.dependencyProvider.Logger().Info(fmt.Sprintf("http server stopped: %s", err))
+	}
 }

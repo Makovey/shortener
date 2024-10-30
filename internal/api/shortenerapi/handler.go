@@ -1,6 +1,7 @@
 package shortenerapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,16 +9,16 @@ import (
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
-	"github.com/Makovey/shortener/internal/service"
+	model "github.com/Makovey/shortener/internal/model/handler"
 )
 
 type handler struct {
-	service service.ShortenerService
+	service def.Shortener
 	logger  logger.Logger
-	config  config.HTTPConfig
+	config  config.Config
 }
 
-func (h *handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
+func (h handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
 	longURL, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Can't read request body, cause: %s", err.Error()))
@@ -31,24 +32,19 @@ func (h *handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(string(longURL))
-	if err != nil {
-		h.logger.Error(fmt.Sprintf("Can't to short url, cause: %s", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
+	short := h.service.Short(string(longURL))
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)))
 	if err != nil {
+		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 }
 
-func (h *handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
+func (h handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
 	shortURL := r.PathValue("id")
-	if shortURL == "" {
+	if len(shortURL) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -56,7 +52,7 @@ func (h *handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
 	longURL, err := h.service.Get(shortURL)
 	if err != nil {
 		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		h.writeResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -64,8 +60,37 @@ func (h *handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+func (h handler) PostShortenURLHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	var req model.ShortenRequest
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't unmarshal request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusBadRequest, "body is invalid")
+		return
+	}
+
+	if len(req.URL) == 0 {
+		h.logger.Error("can't short url, request body is empty")
+		h.writeResponseWithError(w, http.StatusBadRequest, "request body is empty")
+		return
+	}
+
+	short := h.service.Short(req.URL)
+
+	h.logger.Info(fmt.Sprintf("new short url created: %s", short))
+	h.writeResponse(w, http.StatusCreated, model.ShortenResponse{Result: fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)})
+}
+
 func NewShortenerHandler(
-	service service.ShortenerService, logger logger.Logger, config config.HTTPConfig) def.HTTPHandler {
+	service def.Shortener, logger logger.Logger, config config.Config,
+) def.HTTPHandler {
 	return &handler{
 		service: service,
 		logger:  logger,
