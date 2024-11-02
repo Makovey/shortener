@@ -43,4 +43,6 @@ func (a *App) runHTTPServer() {
 	if err := http.ListenAndServe(cfg.Addr(), a.initRouter()); err != nil {
 		a.dependencyProvider.Logger().Info(fmt.Sprintf("http server stopped: %s", err))
 	}
+
+	defer a.dependencyProvider.Closer.CloseAll()
 }

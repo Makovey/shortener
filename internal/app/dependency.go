@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/shortenerapi"
+	"github.com/Makovey/shortener/internal/closer"
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/logger/stdout"
@@ -10,6 +11,7 @@ import (
 	"github.com/Makovey/shortener/internal/repository/postgres"
 	"github.com/Makovey/shortener/internal/service"
 	"github.com/Makovey/shortener/internal/service/shortener"
+	"io"
 )
 
 type dependencyProvider struct {
@@ -21,10 +23,12 @@ type dependencyProvider struct {
 	shorSrv   api.Shortener
 	checker   api.Checker
 	pinger    service.Pinger
+
+	Closer closer.Closer
 }
 
 func newDependencyProvider() *dependencyProvider {
-	return &dependencyProvider{}
+	return &dependencyProvider{Closer: closer.Closer{}}
 }
 
 func (p *dependencyProvider) HTTPHandler() api.HTTPHandler {
@@ -52,6 +56,9 @@ func (p *dependencyProvider) ShortenerRepository() service.Shortener {
 	if p.shortRepo == nil {
 		p.shortRepo = disc.NewFileStorage(p.config.FileStoragePath(), p.Logger())
 	}
+	if c, ok := p.shortRepo.(io.Closer); ok {
+		p.Closer.Add(c)
+	}
 
 	return p.shortRepo
 }
@@ -75,6 +82,10 @@ func (p *dependencyProvider) Checker() api.Checker {
 func (p *dependencyProvider) Pinger() service.Pinger {
 	if p.pinger == nil {
 		p.pinger = postgres.NewPingerRepo(p.Config())
+	}
+
+	if c, ok := p.shortRepo.(io.Closer); ok {
+		p.Closer.Add(c)
 	}
 
 	return p.pinger
