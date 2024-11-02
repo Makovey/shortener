@@ -30,6 +30,7 @@ func TestPostNewURLHandler(t *testing.T) {
 		service api.Shortener
 		logger  logger.Logger
 		config  config.Config
+		checker api.Checker
 	}
 
 	type want struct {
@@ -53,6 +54,7 @@ func TestPostNewURLHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: strings.NewReader("https://github.com"),
@@ -68,6 +70,7 @@ func TestPostNewURLHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(""),
@@ -83,6 +86,7 @@ func TestPostNewURLHandler(t *testing.T) {
 				service: shortener.NewMockService(true),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: errReader(0),
@@ -95,7 +99,12 @@ func TestPostNewURLHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := NewShortenerHandler(tt.dependencies.service, tt.dependencies.logger, tt.dependencies.config)
+			h := NewShortenerHandler(
+				tt.dependencies.service,
+				tt.dependencies.logger,
+				tt.dependencies.config,
+				tt.dependencies.checker,
+			)
 			r := httptest.NewRequest(http.MethodPost, "/", tt.parameters.body)
 			w := httptest.NewRecorder()
 			h.PostNewURLHandler(w, r)
@@ -120,6 +129,7 @@ func TestGetURLHandler(t *testing.T) {
 		service api.Shortener
 		logger  logger.Logger
 		config  config.Config
+		checker api.Checker
 	}
 
 	type want struct {
@@ -143,6 +153,7 @@ func TestGetURLHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				pathValue: "/a1b2c3",
@@ -158,6 +169,7 @@ func TestGetURLHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				pathValue: "",
@@ -173,6 +185,7 @@ func TestGetURLHandler(t *testing.T) {
 				service: shortener.NewMockService(true),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				pathValue: "/a1b2c3",
@@ -185,7 +198,12 @@ func TestGetURLHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := NewShortenerHandler(tt.dependencies.service, tt.dependencies.logger, tt.dependencies.config)
+			h := NewShortenerHandler(
+				tt.dependencies.service,
+				tt.dependencies.logger,
+				tt.dependencies.config,
+				tt.dependencies.checker,
+			)
 
 			r := httptest.NewRequest(http.MethodGet, "/", nil)
 			r.SetPathValue("id", tt.parameters.pathValue)
@@ -207,6 +225,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 		service api.Shortener
 		logger  logger.Logger
 		config  config.Config
+		checker api.Checker
 	}
 
 	type want struct {
@@ -230,6 +249,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -247,6 +267,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -264,6 +285,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 				service: shortener.NewMockService(true),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: errReader(0),
@@ -279,6 +301,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -296,6 +319,7 @@ func TestPostApiShortenHandler(t *testing.T) {
 				service: shortener.NewMockService(false),
 				logger:  stdout.NewLoggerStdoutMock(),
 				config:  config.NewConfig(),
+				checker: api.NewDummyChecker(),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -311,7 +335,12 @@ func TestPostApiShortenHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := NewShortenerHandler(tt.dependencies.service, tt.dependencies.logger, tt.dependencies.config)
+			h := NewShortenerHandler(
+				tt.dependencies.service,
+				tt.dependencies.logger,
+				tt.dependencies.config,
+				tt.dependencies.checker,
+			)
 
 			r := httptest.NewRequest(http.MethodPost, "/api/shorten", tt.parameters.body)
 
