@@ -1,4 +1,4 @@
-package file
+package disc
 
 import (
 	"bufio"
@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Makovey/shortener/internal/logger"
-	model "github.com/Makovey/shortener/internal/model/storage"
 	"github.com/Makovey/shortener/internal/service"
 )
 
@@ -36,7 +35,7 @@ func (r *repo) Get(shortURL string) (string, error) {
 }
 
 func (r *repo) Store(shortURL, longURL string) error {
-	currentURL := model.ShortenerURL{
+	currentURL := ShortenerURL{
 		UUID:        uuid.New(),
 		ShortURL:    shortURL,
 		OriginalURL: longURL,
@@ -59,8 +58,8 @@ func (r *repo) Store(shortURL, longURL string) error {
 	return nil
 }
 
-func (r *repo) fetchAllURLs() []model.ShortenerURL {
-	var shortenerURLs []model.ShortenerURL
+func (r *repo) fetchAllURLs() []ShortenerURL {
+	var shortenerURLs []ShortenerURL
 
 	b, err := os.ReadFile(r.path)
 	if err != nil {
@@ -72,7 +71,7 @@ func (r *repo) fetchAllURLs() []model.ShortenerURL {
 		if len(line) == 0 {
 			break
 		}
-		var url model.ShortenerURL
+		var url ShortenerURL
 		err := json.Unmarshal(line, &url)
 		if err != nil {
 			r.log.Error(fmt.Sprintf("can't unmarshall shortener url cause: %s", err.Error()))
@@ -87,8 +86,8 @@ func (r *repo) fetchAllURLs() []model.ShortenerURL {
 func NewFileStorage(filePath string, log logger.Logger) service.Shortener {
 	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Error(fmt.Sprintf("error opening file: %v", err))
-		panic(fmt.Sprintf("error opening file: %v", err))
+		log.Error(fmt.Sprintf("error opening disc: %v", err))
+		panic(fmt.Sprintf("error opening disc: %v", err))
 	}
 
 	return &repo{

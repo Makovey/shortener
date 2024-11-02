@@ -31,6 +31,7 @@ func (a *App) initRouter() http.Handler {
 	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
 	r.Post("/api/shorten", a.dependencyProvider.HTTPHandler().PostShortenURLHandler)
 	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
+	r.Get("/ping", a.dependencyProvider.HTTPHandler().GetPing)
 
 	return r
 }

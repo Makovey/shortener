@@ -1,4 +1,4 @@
-package storage
+package disc
 
 import "github.com/google/uuid"
 

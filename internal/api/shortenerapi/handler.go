@@ -7,13 +7,14 @@ import (
 	"net/http"
 
 	def "github.com/Makovey/shortener/internal/api"
+	"github.com/Makovey/shortener/internal/api/model"
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
-	model "github.com/Makovey/shortener/internal/model/handler"
 )
 
 type handler struct {
 	service def.Shortener
+	checker def.Checker
 	logger  logger.Logger
 	config  config.Config
 }
@@ -88,12 +89,27 @@ func (h handler) PostShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	h.writeResponse(w, http.StatusCreated, model.ShortenResponse{Result: fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)})
 }
 
+func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
+	err := h.checker.CheckPing()
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Ping error: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func NewShortenerHandler(
-	service def.Shortener, logger logger.Logger, config config.Config,
+	service def.Shortener,
+	logger logger.Logger,
+	config config.Config,
+	checker def.Checker,
 ) def.HTTPHandler {
 	return &handler{
 		service: service,
 		logger:  logger,
 		config:  config,
+		checker: checker,
 	}
 }
