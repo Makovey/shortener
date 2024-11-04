@@ -4,17 +4,15 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/google/uuid"
 
 	"github.com/Makovey/shortener/internal/logger"
+	"github.com/Makovey/shortener/internal/repository"
 	"github.com/Makovey/shortener/internal/service"
 )
-
-var errURLNotFound = errors.New("url is not existed yet")
 
 type repo struct {
 	file   *os.File
@@ -31,7 +29,7 @@ func (r *repo) Get(shortURL string) (string, error) {
 		}
 	}
 
-	return "", errURLNotFound
+	return "", repository.ErrURLNotFound
 }
 
 func (r *repo) Store(shortURL, longURL string) error {

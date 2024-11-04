@@ -33,14 +33,15 @@ func (h handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short := h.service.Short(string(longURL))
-	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)))
+	short, err := h.service.Short(string(longURL))
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
+	_, _ = w.Write([]byte(fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)))
 }
 
 func (h handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +84,12 @@ func (h handler) PostShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short := h.service.Short(req.URL)
+	short, err := h.service.Short(req.URL)
+	if err != nil {
+		h.logger.Error(err.Error())
+		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
 
 	h.logger.Info(fmt.Sprintf("new short url created: %s", short))
 	h.writeResponse(w, http.StatusCreated, model.ShortenResponse{Result: fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)})

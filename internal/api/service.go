@@ -1,7 +1,7 @@
 package api
 
 type Shortener interface {
-	Short(url string) string
+	Short(url string) (string, error)
 	Get(shortURL string) (string, error)
 }
 

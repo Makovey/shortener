@@ -9,8 +9,12 @@ type mockService struct {
 	isErrorNeeded bool
 }
 
-func (m *mockService) Short(url string) string {
-	return "a1b2c3"
+func (m *mockService) Short(url string) (string, error) {
+	if m.isErrorNeeded {
+		return "", errors.New("mock error")
+	}
+
+	return "a1b2c3", nil
 }
 
 func (m *mockService) Get(shortURL string) (string, error) {

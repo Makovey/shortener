@@ -17,8 +17,6 @@ type Config interface {
 const (
 	defaultAddr    = "localhost:8080"
 	defaultBaseURL = "http://localhost:8080"
-	defaultPathURL = "./urls.txt"
-	defaultDSN     = "postgres://admin:admin@localhost:5432/postgres"
 )
 
 type config struct {
@@ -79,7 +77,7 @@ func baseURLValue(envCfg envConfig, flags flagsValue) string {
 }
 
 func filePathValue(envCfg envConfig, flags flagsValue) string {
-	urlPath := defaultPathURL
+	var urlPath string
 	if envStoragePath := envCfg.FileStoragePath; envStoragePath != "" {
 		urlPath = envStoragePath
 	} else if flagPath := flags.fileStoragePath; flagPath != "" {
@@ -90,14 +88,14 @@ func filePathValue(envCfg envConfig, flags flagsValue) string {
 }
 
 func databaseDSNValue(envCfg envConfig, flags flagsValue) string {
-	databaseDSN := defaultDSN
+	var databaseDSN string
 	if envDSN := envCfg.DatabaseDSN; envDSN != "" {
 		databaseDSN = envDSN
 	} else if flagDSN := flags.databaseDSN; flagDSN != "" {
 		databaseDSN = flagDSN
 	}
 
-	if !strings.Contains(databaseDSN, "?sslmode=disable") {
+	if databaseDSN != "" && !strings.Contains(databaseDSN, "?sslmode=disable") {
 		databaseDSN = databaseDSN + "?sslmode=disable"
 	}
 

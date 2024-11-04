@@ -13,11 +13,14 @@ type service struct {
 	pinger repo.Pinger
 }
 
-func (s *service) Short(url string) string {
+func (s *service) Short(url string) (string, error) {
 	shortURL := s.generateShortURL(url)[:7]
-	s.repo.Store(shortURL, url)
+	err := s.repo.Store(shortURL, url)
+	if err != nil {
+		return "", err
+	}
 
-	return shortURL
+	return shortURL, nil
 }
 
 func (s *service) Get(shortURL string) (string, error) {
