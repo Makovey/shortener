@@ -38,7 +38,6 @@ func (p *dependencyProvider) HTTPHandler() api.HTTPHandler {
 		p.shortHandler = shortenerapi.NewShortenerHandler(
 			p.ShortenerService(),
 			p.Logger(),
-			p.Config(),
 			p.Checker(),
 		)
 	}
@@ -74,7 +73,7 @@ func (p *dependencyProvider) ShortenerRepository() service.Shortener {
 
 func (p *dependencyProvider) ShortenerService() api.Shortener {
 	if p.shorSrv == nil {
-		p.shorSrv = shortener.NewShortenerService(p.ShortenerRepository())
+		p.shorSrv = shortener.NewShortenerService(p.ShortenerRepository(), p.Config())
 	}
 
 	return p.shorSrv

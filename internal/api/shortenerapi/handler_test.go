@@ -102,12 +102,11 @@ func TestPostNewURLHandler(t *testing.T) {
 			h := NewShortenerHandler(
 				tt.dependencies.service,
 				tt.dependencies.logger,
-				tt.dependencies.config,
 				tt.dependencies.checker,
 			)
 			r := httptest.NewRequest(http.MethodPost, "/", tt.parameters.body)
 			w := httptest.NewRecorder()
-			h.PostNewURLHandler(w, r)
+			h.PostNewURL(w, r)
 
 			res := w.Result()
 			defer res.Body.Close()
@@ -201,7 +200,6 @@ func TestGetURLHandler(t *testing.T) {
 			h := NewShortenerHandler(
 				tt.dependencies.service,
 				tt.dependencies.logger,
-				tt.dependencies.config,
 				tt.dependencies.checker,
 			)
 
@@ -209,7 +207,7 @@ func TestGetURLHandler(t *testing.T) {
 			r.SetPathValue("id", tt.parameters.pathValue)
 
 			w := httptest.NewRecorder()
-			h.GetURLHandler(w, r)
+			h.GetURL(w, r)
 
 			res := w.Result()
 			defer res.Body.Close()
@@ -338,14 +336,13 @@ func TestPostApiShortenHandler(t *testing.T) {
 			h := NewShortenerHandler(
 				tt.dependencies.service,
 				tt.dependencies.logger,
-				tt.dependencies.config,
 				tt.dependencies.checker,
 			)
 
 			r := httptest.NewRequest(http.MethodPost, "/api/shorten", tt.parameters.body)
 
 			w := httptest.NewRecorder()
-			h.PostShortenURLHandler(w, r)
+			h.PostShortenURL(w, r)
 
 			res := w.Result()
 			defer res.Body.Close()

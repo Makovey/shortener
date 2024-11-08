@@ -28,9 +28,10 @@ func (a *App) initRouter() http.Handler {
 	r.Use(middleware.NewCompressor().Compress)
 	r.Use(chiMiddleware.Recoverer)
 
-	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURLHandler)
-	r.Post("/api/shorten", a.dependencyProvider.HTTPHandler().PostShortenURLHandler)
-	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURLHandler)
+	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURL)
+	r.Post("/api/shorten", a.dependencyProvider.HTTPHandler().PostShortenURL)
+	r.Post("/api/shorten/batch", a.dependencyProvider.HTTPHandler().PostBatch)
+	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURL)
 	r.Get("/ping", a.dependencyProvider.HTTPHandler().GetPing)
 
 	return r

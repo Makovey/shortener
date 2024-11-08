@@ -8,7 +8,6 @@ import (
 
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
-	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 )
 
@@ -16,10 +15,9 @@ type handler struct {
 	service def.Shortener
 	checker def.Checker
 	logger  logger.Logger
-	config  config.Config
 }
 
-func (h handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
+func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 	longURL, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Can't read request body, cause: %s", err.Error()))
@@ -41,10 +39,10 @@ func (h handler) PostNewURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_, _ = w.Write([]byte(fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)))
+	_, _ = w.Write([]byte(short))
 }
 
-func (h handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
+func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	shortURL := r.PathValue("id")
 	if len(shortURL) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -62,7 +60,7 @@ func (h handler) GetURLHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func (h handler) PostShortenURLHandler(w http.ResponseWriter, r *http.Request) {
+func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
@@ -92,7 +90,7 @@ func (h handler) PostShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info(fmt.Sprintf("new short url created: %s", short))
-	h.writeResponse(w, http.StatusCreated, model.ShortenResponse{Result: fmt.Sprintf("%s/%s", h.config.BaseReturnedURL(), short)})
+	h.writeResponse(w, http.StatusCreated, model.ShortenResponse{Result: short})
 }
 
 func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
@@ -106,16 +104,47 @@ func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	var req []model.ShortenBatchRequest
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't unmarshal request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusBadRequest, "body is invalid")
+		return
+	}
+
+	if len(req) == 0 {
+		h.logger.Error("can't short url, request body is empty")
+		h.writeResponseWithError(w, http.StatusBadRequest, "request body is empty")
+		return
+	}
+
+	resp, err := h.service.ShortBatch(req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	h.logger.Info(fmt.Sprintf("batch processed with response: %s", resp))
+	h.writeResponse(w, http.StatusCreated, resp)
+}
+
 func NewShortenerHandler(
 	service def.Shortener,
 	logger logger.Logger,
-	config config.Config,
 	checker def.Checker,
 ) def.HTTPHandler {
 	return &handler{
 		service: service,
 		logger:  logger,
-		config:  config,
 		checker: checker,
 	}
 }
