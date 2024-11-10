@@ -2,6 +2,7 @@ package shortenerapi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
 	"github.com/Makovey/shortener/internal/logger"
+	"github.com/Makovey/shortener/internal/repository"
 )
 
 type handler struct {
@@ -34,6 +36,11 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 	short, err := h.service.Short(string(longURL))
 	if err != nil {
 		h.logger.Error(err.Error())
+		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
+			w.WriteHeader(http.StatusConflict)
+			_, _ = w.Write([]byte(short))
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -85,6 +92,10 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 	short, err := h.service.Short(req.URL)
 	if err != nil {
 		h.logger.Error(err.Error())
+		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
+			h.writeResponse(w, http.StatusConflict, model.ShortenResponse{Result: short})
+			return
+		}
 		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}

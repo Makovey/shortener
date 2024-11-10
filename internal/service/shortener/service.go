@@ -20,11 +20,12 @@ type service struct {
 func (s *service) Short(url string) (string, error) {
 	shortURL := s.generateShortURL(url)[:7]
 	err := s.repo.Store(shortURL, url)
+	fullShortURL := fmt.Sprintf("%s/%s", s.cfg.BaseReturnedURL(), shortURL)
 	if err != nil {
-		return "", err
+		return fullShortURL, err
 	}
 
-	return fmt.Sprintf("%s/%s", s.cfg.BaseReturnedURL(), shortURL), nil
+	return fullShortURL, nil
 }
 
 func (s *service) Get(shortURL string) (string, error) {
