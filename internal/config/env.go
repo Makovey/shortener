@@ -10,6 +10,7 @@ type envConfig struct {
 	Addr            string `env:"SERVER_ADDRESS"`
 	BaseReturnedURL string `env:"BASE_URL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
+	DatabaseDSN     string `env:"DATABASE_DSN"`
 }
 
 func newEnvConfig() envConfig {

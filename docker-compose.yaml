@@ -1,0 +1,14 @@
+version: '3'
+
+volumes:
+  postgres_volumes:
+
+services:
+  pg:
+    image: postgres:14-alpine3.17
+    environment:
+      - "POSTGRES_DB=shortener"
+      - "POSTGRES_USER=admin"
+      - "POSTGRES_PASSWORD=admin"
+    ports:
+      - "5432:5432"
