@@ -35,6 +35,7 @@ func (a *App) initRouter() http.Handler {
 	r.Post("/api/shorten/batch", a.dependencyProvider.HTTPHandler().PostBatch)
 	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURL)
 	r.Get("/ping", a.dependencyProvider.HTTPHandler().GetPing)
+	r.Get("/api/user/urls", a.dependencyProvider.HTTPHandler().GetAllURLS)
 
 	return r
 }

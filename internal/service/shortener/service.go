@@ -17,9 +17,9 @@ type service struct {
 	cfg    config.Config
 }
 
-func (s *service) Short(url string) (string, error) {
+func (s *service) Short(url, userID string) (string, error) {
 	shortURL := s.generateShortURL(url)[:7]
-	err := s.repo.Store(shortURL, url)
+	err := s.repo.Store(shortURL, url, userID)
 	fullShortURL := fmt.Sprintf("%s/%s", s.cfg.BaseReturnedURL(), shortURL)
 	if err != nil {
 		return fullShortURL, err
@@ -28,15 +28,15 @@ func (s *service) Short(url string) (string, error) {
 	return fullShortURL, nil
 }
 
-func (s *service) Get(shortURL string) (string, error) {
-	return s.repo.Get(shortURL)
+func (s *service) Get(shortURL, userID string) (string, error) {
+	return s.repo.Get(shortURL, userID)
 }
 
 func (s *service) CheckPing() error {
 	return s.pinger.Ping()
 }
 
-func (s *service) ShortBatch(batch []model.ShortenBatchRequest) ([]model.ShortenBatchResponse, error) {
+func (s *service) ShortBatch(batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error) {
 	var b []model.ShortenBatch
 	for _, req := range batch {
 		tmp := model.ShortenBatch{
@@ -48,7 +48,7 @@ func (s *service) ShortBatch(batch []model.ShortenBatchRequest) ([]model.Shorten
 		b = append(b, tmp)
 	}
 
-	err := s.repo.StoreBatch(b)
+	err := s.repo.StoreBatch(b, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +64,19 @@ func (s *service) ShortBatch(batch []model.ShortenBatchRequest) ([]model.Shorten
 	}
 
 	return res, nil
+}
+
+func (s *service) GetAll(userID string) ([]model.ShortenBatch, error) {
+	models, err := s.repo.GetAll(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range models {
+		models[i].ShortURL = fmt.Sprintf("%s/%s", s.cfg.BaseReturnedURL(), models[i].ShortURL)
+	}
+
+	return models, nil
 }
 
 func (s *service) generateShortURL(url string) string {

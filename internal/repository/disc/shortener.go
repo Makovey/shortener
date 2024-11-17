@@ -24,7 +24,7 @@ type repo struct {
 	mu     sync.RWMutex
 }
 
-func (r *repo) Get(shortURL string) (string, error) {
+func (r *repo) Get(shortURL, userID string) (string, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -38,7 +38,7 @@ func (r *repo) Get(shortURL string) (string, error) {
 	return "", repository.ErrURLNotFound
 }
 
-func (r *repo) Store(shortURL, longURL string) error {
+func (r *repo) Store(shortURL, longURL, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -46,6 +46,7 @@ func (r *repo) Store(shortURL, longURL string) error {
 		UUID:        uuid.New().String(),
 		ShortURL:    shortURL,
 		OriginalURL: longURL,
+		OwnerID:     userID,
 	}
 
 	b, err := json.Marshal(&currentURL)
@@ -90,7 +91,7 @@ func (r *repo) fetchAllURLs() []ShortenerURL {
 	return shortenerURLs
 }
 
-func (r *repo) StoreBatch(models []model.ShortenBatch) error {
+func (r *repo) StoreBatch(models []model.ShortenBatch, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -99,6 +100,7 @@ func (r *repo) StoreBatch(models []model.ShortenBatch) error {
 			UUID:        m.CorrelationID,
 			ShortURL:    m.ShortURL,
 			OriginalURL: m.OriginalURL,
+			OwnerID:     userID,
 		}
 
 		b, err := json.Marshal(&url)
@@ -118,6 +120,20 @@ func (r *repo) StoreBatch(models []model.ShortenBatch) error {
 	}
 
 	return nil
+}
+
+func (r *repo) GetAll(userID string) ([]model.ShortenBatch, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	models := make([]model.ShortenBatch, 0)
+
+	urls := r.fetchAllURLs()
+	for _, url := range urls {
+		models = append(models, model.ShortenBatch{ShortURL: url.ShortURL, OriginalURL: url.OriginalURL})
+	}
+
+	return models, nil
 }
 
 func (r *repo) Close() error {

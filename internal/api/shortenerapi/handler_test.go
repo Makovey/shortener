@@ -1,6 +1,7 @@
 package shortenerapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/logger/stdout"
+	"github.com/Makovey/shortener/internal/middleware"
 	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
@@ -106,7 +108,9 @@ func TestPostNewURLHandler(t *testing.T) {
 			)
 			r := httptest.NewRequest(http.MethodPost, "/", tt.parameters.body)
 			w := httptest.NewRecorder()
-			h.PostNewURL(w, r)
+			ctx := context.WithValue(r.Context(), middleware.CtxUserIDKey, "userID")
+
+			h.PostNewURL(w, r.WithContext(ctx))
 
 			res := w.Result()
 			defer res.Body.Close()
@@ -205,9 +209,10 @@ func TestGetURLHandler(t *testing.T) {
 
 			r := httptest.NewRequest(http.MethodGet, "/", nil)
 			r.SetPathValue("id", tt.parameters.pathValue)
+			ctx := context.WithValue(r.Context(), middleware.CtxUserIDKey, "userID")
 
 			w := httptest.NewRecorder()
-			h.GetURL(w, r)
+			h.GetURL(w, r.WithContext(ctx))
 
 			res := w.Result()
 			defer res.Body.Close()
@@ -340,9 +345,10 @@ func TestPostApiShortenHandler(t *testing.T) {
 			)
 
 			r := httptest.NewRequest(http.MethodPost, "/api/shorten", tt.parameters.body)
+			ctx := context.WithValue(r.Context(), middleware.CtxUserIDKey, "userID")
 
 			w := httptest.NewRecorder()
-			h.PostShortenURL(w, r)
+			h.PostShortenURL(w, r.WithContext(ctx))
 
 			res := w.Result()
 			defer res.Body.Close()

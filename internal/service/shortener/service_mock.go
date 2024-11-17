@@ -11,7 +11,7 @@ type mockService struct {
 	isErrorNeeded bool
 }
 
-func (m *mockService) Short(url string) (string, error) {
+func (m *mockService) Short(url, userID string) (string, error) {
 	if m.isErrorNeeded {
 		return "", errors.New("mock error")
 	}
@@ -19,7 +19,7 @@ func (m *mockService) Short(url string) (string, error) {
 	return "a1b2c3", nil
 }
 
-func (m *mockService) Get(shortURL string) (string, error) {
+func (m *mockService) Get(shortURL, userID string) (string, error) {
 	if m.isErrorNeeded {
 		return "", errors.New("mock error")
 	}
@@ -27,7 +27,7 @@ func (m *mockService) Get(shortURL string) (string, error) {
 	return "https://github.com", nil
 }
 
-func (m *mockService) ShortBatch(batch []model.ShortenBatchRequest) ([]model.ShortenBatchResponse, error) {
+func (m *mockService) ShortBatch(batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error) {
 	if m.isErrorNeeded {
 		return nil, errors.New("mock error")
 	}
@@ -36,6 +36,23 @@ func (m *mockService) ShortBatch(batch []model.ShortenBatchRequest) ([]model.Sho
 		{
 			CorrelationID: "mockId",
 			ShortURL:      "a1b2c3",
+		},
+	}, nil
+}
+
+func (m *mockService) GetAll(userID string) ([]model.ShortenBatch, error) {
+	if m.isErrorNeeded {
+		return nil, errors.New("mock error")
+	}
+
+	return []model.ShortenBatch{
+		{
+			ShortURL:    "a1b2c3",
+			OriginalURL: "https://github.com",
+		},
+		{
+			ShortURL:    "d4e5f6",
+			OriginalURL: "https://gitlab.com",
 		},
 	}, nil
 }

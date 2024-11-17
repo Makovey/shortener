@@ -1,6 +1,7 @@
 package shortenerapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
 	"github.com/Makovey/shortener/internal/logger"
+	"github.com/Makovey/shortener/internal/middleware"
 	"github.com/Makovey/shortener/internal/repository"
 )
 
@@ -20,6 +22,12 @@ type handler struct {
 }
 
 func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" {
+		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	longURL, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Can't read request body, cause: %s", err.Error()))
@@ -33,7 +41,7 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(string(longURL))
+	short, err := h.service.Short(string(longURL), userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
@@ -50,13 +58,19 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" {
+		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	shortURL := r.PathValue("id")
 	if len(shortURL) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	longURL, err := h.service.Get(shortURL)
+	longURL, err := h.service.Get(shortURL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponse(w, http.StatusBadRequest, err.Error())
@@ -68,6 +82,12 @@ func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" {
+		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
@@ -89,7 +109,7 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(req.URL)
+	short, err := h.service.Short(req.URL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
@@ -116,6 +136,12 @@ func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" {
+		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
@@ -137,7 +163,7 @@ func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.ShortBatch(req)
+	resp, err := h.service.ShortBatch(req, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
@@ -146,6 +172,37 @@ func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info(fmt.Sprintf("batch processed with response: %s", resp))
 	h.writeResponse(w, http.StatusCreated, resp)
+}
+
+func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" {
+		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	models, err := h.service.GetAll(userID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		h.writeResponseWithError(w, http.StatusBadRequest, "internal server error")
+		return
+	}
+
+	h.logger.Info(fmt.Sprintf("get all processed queried successfully with length: %d", len(models)))
+	if len(models) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	h.writeResponse(w, http.StatusOK, models)
+}
+
+func getUserIDFromContext(ctx context.Context) string {
+	if ctx.Value(middleware.CtxUserIDKey) == nil {
+		return ""
+	}
+
+	return ctx.Value(middleware.CtxUserIDKey).(string)
 }
 
 func NewShortenerHandler(

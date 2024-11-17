@@ -3,9 +3,10 @@ package api
 import "github.com/Makovey/shortener/internal/api/model"
 
 type Shortener interface {
-	Short(url string) (string, error)
-	Get(shortURL string) (string, error)
-	ShortBatch(batch []model.ShortenBatchRequest) ([]model.ShortenBatchResponse, error)
+	Short(url, userID string) (string, error)
+	Get(shortURL, userID string) (string, error)
+	ShortBatch(batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error)
+	GetAll(userID string) ([]model.ShortenBatch, error)
 }
 
 type Checker interface {
