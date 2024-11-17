@@ -4,10 +4,10 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/Makovey/shortener/internal/config"
 
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
+	"github.com/Makovey/shortener/internal/config"
 	repo "github.com/Makovey/shortener/internal/service"
 )
 

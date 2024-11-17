@@ -1,6 +1,7 @@
 package app
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 
@@ -25,6 +26,7 @@ func (a *App) Run() {
 func (a *App) initRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.NewLogger(a.dependencyProvider.Logger()).Logger)
+	r.Use(middleware.NewJWTHandler(a.dependencyProvider.Logger()).JWTHandler)
 	r.Use(middleware.NewCompressor().Compress)
 	r.Use(chiMiddleware.Recoverer)
 
@@ -41,7 +43,15 @@ func (a *App) runHTTPServer() {
 	cfg := a.dependencyProvider.Config()
 	a.dependencyProvider.Logger().Info(fmt.Sprintf("starting http server on -> %s", cfg.Addr()))
 
-	if err := http.ListenAndServe(cfg.Addr(), a.initRouter()); err != nil {
+	srv := &http.Server{
+		Addr:    cfg.Addr(),
+		Handler: a.initRouter(),
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS13,
+		},
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
 		a.dependencyProvider.Logger().Info(fmt.Sprintf("http server stopped: %s", err))
 	}
 
