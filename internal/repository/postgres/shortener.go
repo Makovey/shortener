@@ -54,14 +54,14 @@ func (r *repo) Get(shortURL, userID string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	stmt, err := r.db.PrepareContext(ctx, `SELECT original_url FROM shortener WHERE short_url = $1 AND owner_user_id = $2`)
+	stmt, err := r.db.PrepareContext(ctx, `SELECT original_url FROM shortener WHERE short_url = $1`)
 	if err != nil {
 		return "", err
 	}
 
 	defer stmt.Close()
 
-	row := stmt.QueryRowContext(ctx, shortURL, userID)
+	row := stmt.QueryRowContext(ctx, shortURL)
 
 	r.log.Info(fmt.Sprintf("queried select, with %s", shortURL))
 
@@ -141,6 +141,10 @@ func (r *repo) GetAll(userID string) ([]model.ShortenBatch, error) {
 			return nil, err
 		}
 		models = append(models, shorten)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return models, nil
