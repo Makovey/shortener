@@ -3,6 +3,7 @@ package disc
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/Makovey/shortener/internal/api/model"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/repository"
+	repoModel "github.com/Makovey/shortener/internal/repository/model"
 	"github.com/Makovey/shortener/internal/service"
 )
 
@@ -24,18 +26,18 @@ type repo struct {
 	mu     sync.RWMutex
 }
 
-func (r *repo) Get(shortURL, userID string) (string, error) {
+func (r *repo) Get(shortURL, userID string) (repoModel.ShortenGet, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	shortenerURLs := r.fetchAllURLs()
-	for _, shortenerURL := range shortenerURLs {
-		if shortenerURL.ShortURL == shortURL {
-			return shortenerURL.OriginalURL, nil
+	for _, u := range shortenerURLs {
+		if u.ShortURL == shortURL {
+			return repoModel.ShortenGet{OriginalURL: u.OriginalURL, IsDeleted: u.IsDeleted}, nil
 		}
 	}
 
-	return "", repository.ErrURLNotFound
+	return repoModel.ShortenGet{}, repository.ErrURLNotFound
 }
 
 func (r *repo) Store(shortURL, longURL, userID string) error {
@@ -47,6 +49,7 @@ func (r *repo) Store(shortURL, longURL, userID string) error {
 		ShortURL:    shortURL,
 		OriginalURL: longURL,
 		OwnerID:     userID,
+		IsDeleted:   false,
 	}
 
 	b, err := json.Marshal(&currentURL)
@@ -134,6 +137,66 @@ func (r *repo) GetAll(userID string) ([]model.ShortenBatch, error) {
 	}
 
 	return models, nil
+}
+
+func (r *repo) DeleteUsersURL(ctx context.Context, userID string, url string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	urls := r.fetchAllURLs()
+
+	for i, u := range urls {
+		if u.ShortURL == url && u.OwnerID == userID {
+			urls[i].IsDeleted = true
+		}
+	}
+
+	if err := os.Truncate(r.path, 0); err != nil {
+		return err
+	}
+
+	err := r.RewriteURLS(urls, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *repo) RewriteURLS(models []ShortenerURL, userID string) error {
+	for _, m := range models {
+		var id string
+		if m.OwnerID == userID {
+			id = m.OwnerID
+		} else {
+			id = userID
+		}
+
+		url := ShortenerURL{
+			UUID:        uuid.NewString(),
+			ShortURL:    m.ShortURL,
+			OriginalURL: m.OriginalURL,
+			IsDeleted:   m.IsDeleted,
+			OwnerID:     id,
+		}
+
+		b, err := json.Marshal(&url)
+		if err != nil {
+			r.log.Error(fmt.Sprintf("can't marshall shortener url cause: %s", err.Error()))
+			return err
+		}
+		b = append(b, '\n')
+
+		_, err = r.writer.Write(b)
+		if err != nil {
+			r.log.Error(fmt.Sprintf("can't write shortener url cause: %s", err.Error()))
+			return err
+		}
+
+		_ = r.writer.Flush()
+	}
+
+	return nil
 }
 
 func (r *repo) Close() error {

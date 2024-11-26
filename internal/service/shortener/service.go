@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -8,13 +9,17 @@ import (
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
 	"github.com/Makovey/shortener/internal/config"
+	"github.com/Makovey/shortener/internal/logger"
+	repoModel "github.com/Makovey/shortener/internal/repository/model"
 	repo "github.com/Makovey/shortener/internal/service"
+	"github.com/Makovey/shortener/internal/service/utils"
 )
 
 type service struct {
 	repo   repo.Shortener
 	pinger repo.Pinger
 	cfg    config.Config
+	log    logger.Logger
 }
 
 func (s *service) Short(url, userID string) (string, error) {
@@ -28,7 +33,7 @@ func (s *service) Short(url, userID string) (string, error) {
 	return fullShortURL, nil
 }
 
-func (s *service) Get(shortURL, userID string) (string, error) {
+func (s *service) Get(shortURL, userID string) (repoModel.ShortenGet, error) {
 	return s.repo.Get(shortURL, userID)
 }
 
@@ -79,6 +84,40 @@ func (s *service) GetAll(userID string) ([]model.ShortenBatch, error) {
 	return models, nil
 }
 
+func (s *service) DeleteUsersURLS(ctx context.Context, userID string, shortURLs []string) []error {
+	ch := utils.Generator(ctx, shortURLs)
+	results := utils.FanOut(ctx, 5, func(ctx context.Context) chan error {
+		errors := make(chan error)
+
+		go func() {
+			defer close(errors)
+
+			for url := range ch {
+				err := s.repo.DeleteUsersURL(ctx, userID, url)
+				if err != nil {
+					s.log.Warning(fmt.Sprintf("failed to delete users URL %s, error is: %s", url, err.Error()))
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+				case errors <- err:
+				}
+			}
+		}()
+		return errors
+	})
+
+	errorsCh := utils.FanIn(ctx, results...)
+
+	errors := make([]error, len(errorsCh))
+	for e := range errorsCh {
+		errors = append(errors, e)
+	}
+
+	return errors
+}
+
 func (s *service) generateShortURL(url string) string {
 	h := md5.New()
 	h.Write([]byte(url))
@@ -86,8 +125,12 @@ func (s *service) generateShortURL(url string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func NewShortenerService(shortenerRepo repo.Shortener, cfg config.Config) def.Shortener {
-	return &service{repo: shortenerRepo, cfg: cfg}
+func NewShortenerService(
+	shortenerRepo repo.Shortener,
+	cfg config.Config,
+	log logger.Logger,
+) def.Shortener {
+	return &service{repo: shortenerRepo, cfg: cfg, log: log}
 }
 
 func NewChecker(pingerRepo repo.Pinger) def.Checker {

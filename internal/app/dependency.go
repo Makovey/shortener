@@ -73,7 +73,7 @@ func (p *dependencyProvider) ShortenerRepository() service.Shortener {
 
 func (p *dependencyProvider) ShortenerService() api.Shortener {
 	if p.shorSrv == nil {
-		p.shorSrv = shortener.NewShortenerService(p.ShortenerRepository(), p.Config())
+		p.shorSrv = shortener.NewShortenerService(p.ShortenerRepository(), p.Config(), p.Logger())
 	}
 
 	return p.shorSrv

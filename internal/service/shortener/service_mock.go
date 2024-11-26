@@ -1,10 +1,12 @@
 package shortener
 
 import (
+	"context"
 	"errors"
 
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
+	repoModel "github.com/Makovey/shortener/internal/repository/model"
 )
 
 type mockService struct {
@@ -19,12 +21,12 @@ func (m *mockService) Short(url, userID string) (string, error) {
 	return "a1b2c3", nil
 }
 
-func (m *mockService) Get(shortURL, userID string) (string, error) {
+func (m *mockService) Get(shortURL, userID string) (repoModel.ShortenGet, error) {
 	if m.isErrorNeeded {
-		return "", errors.New("mock error")
+		return repoModel.ShortenGet{}, errors.New("mock error")
 	}
 
-	return "https://github.com", nil
+	return repoModel.ShortenGet{OriginalURL: "https://github.com", IsDeleted: false}, nil
 }
 
 func (m *mockService) ShortBatch(batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error) {
@@ -55,6 +57,14 @@ func (m *mockService) GetAll(userID string) ([]model.ShortenBatch, error) {
 			OriginalURL: "https://gitlab.com",
 		},
 	}, nil
+}
+
+func (m *mockService) DeleteUsersURLS(ctx context.Context, userID string, shortURLs []string) []error {
+	if m.isErrorNeeded {
+		return []error{errors.New("mock error")}
+	}
+
+	return nil
 }
 
 func NewMockService(isErrorNeeded bool) def.Shortener {

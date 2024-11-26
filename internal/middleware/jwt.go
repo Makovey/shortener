@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/Makovey/shortener/internal/logger"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+
+	"github.com/Makovey/shortener/internal/logger"
 )
 
 type Key string

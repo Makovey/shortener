@@ -15,6 +15,7 @@ import (
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/repository"
+	repoModel "github.com/Makovey/shortener/internal/repository/model"
 	"github.com/Makovey/shortener/internal/service"
 )
 
@@ -50,13 +51,15 @@ func (r *repo) Store(shortURL, longURL, userID string) error {
 	return nil
 }
 
-func (r *repo) Get(shortURL, userID string) (string, error) {
+func (r *repo) Get(shortURL, userID string) (repoModel.ShortenGet, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	stmt, err := r.db.PrepareContext(ctx, `SELECT original_url FROM shortener WHERE short_url = $1`)
+	stmt, err := r.db.PrepareContext(ctx, `
+		SELECT original_url, is_deleted FROM shortener WHERE short_url = $1
+	`)
 	if err != nil {
-		return "", err
+		return repoModel.ShortenGet{}, err
 	}
 
 	defer stmt.Close()
@@ -65,13 +68,13 @@ func (r *repo) Get(shortURL, userID string) (string, error) {
 
 	r.log.Info(fmt.Sprintf("queried select, with %s", shortURL))
 
-	var originalURL string
-	err = row.Scan(&originalURL)
+	var getModel repoModel.ShortenGet
+	err = row.Scan(&getModel.OriginalURL, &getModel.IsDeleted)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", repository.ErrURLNotFound
+		return repoModel.ShortenGet{}, repository.ErrURLNotFound
 	}
 
-	return originalURL, nil
+	return getModel, nil
 }
 
 func (r *repo) Ping() error {
@@ -103,7 +106,7 @@ func (r *repo) StoreBatch(models []model.ShortenBatch, userID string) error {
 	defer stmt.Close()
 
 	for _, m := range models {
-		_, err := stmt.ExecContext(ctx, m.ShortURL, m.OriginalURL, userID)
+		_, err = stmt.ExecContext(ctx, m.ShortURL, m.OriginalURL, userID)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -150,6 +153,33 @@ func (r *repo) GetAll(userID string) ([]model.ShortenBatch, error) {
 	return models, nil
 }
 
+func (r *repo) DeleteUsersURL(ctx context.Context, userID string, url string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	stmt, err := tx.PrepareContext(ctx, `
+		UPDATE shortener SET is_deleted = true WHERE owner_user_id = $1 AND short_url = $2
+ 	`)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, userID, url)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (r *repo) Close() error {
 	return r.db.Close()
 }
@@ -194,6 +224,7 @@ func (r *repo) prepareDB() {
 			original_url TEXT,
 			created_at TIMESTAMP default CURRENT_TIMESTAMP,
 			owner_user_id TEXT NOT NULL,
+			is_deleted BOOLEAN default FALSE,
 			UNIQUE (original_url)
 		);`
 

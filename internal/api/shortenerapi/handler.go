@@ -70,14 +70,19 @@ func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	longURL, err := h.service.Get(shortURL, userID)
+	m, err := h.service.Get(shortURL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	w.Header().Add("Location", longURL)
+	if m.IsDeleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+
+	w.Header().Add("Location", m.OriginalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
@@ -195,6 +200,39 @@ func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.writeResponse(w, http.StatusOK, models)
+}
+
+func (h handler) DeleteURLS(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" {
+		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	var ids []string
+	err = json.Unmarshal(body, &ids)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't unmarshal request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusBadRequest, "body is invalid")
+		return
+	}
+
+	deleteErrors := h.service.DeleteUsersURLS(r.Context(), userID, ids)
+
+	for _, err = range deleteErrors {
+		if err != nil {
+			h.logger.Error(err.Error())
+		}
+	}
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func getUserIDFromContext(ctx context.Context) string {

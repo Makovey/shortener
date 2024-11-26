@@ -31,11 +31,15 @@ func (a *App) initRouter() http.Handler {
 	r.Use(chiMiddleware.Recoverer)
 
 	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURL)
-	r.Post("/api/shorten", a.dependencyProvider.HTTPHandler().PostShortenURL)
-	r.Post("/api/shorten/batch", a.dependencyProvider.HTTPHandler().PostBatch)
 	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURL)
 	r.Get("/ping", a.dependencyProvider.HTTPHandler().GetPing)
-	r.Get("/api/user/urls", a.dependencyProvider.HTTPHandler().GetAllURLS)
+
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/shorten", a.dependencyProvider.HTTPHandler().PostShortenURL)
+		r.Post("/shorten/batch", a.dependencyProvider.HTTPHandler().PostBatch)
+		r.Get("/user/urls", a.dependencyProvider.HTTPHandler().GetAllURLS)
+		r.Delete("/user/urls", a.dependencyProvider.HTTPHandler().DeleteURLS)
+	})
 
 	return r
 }
