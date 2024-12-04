@@ -26,6 +26,18 @@ type config struct {
 	databaseDSN     string
 }
 
+func NewConfig() Config {
+	envCfg := newEnvConfig()
+	flags := newFlagsValue()
+
+	return &config{
+		addr:            addrValue(envCfg, flags),
+		baseReturnedURL: baseURLValue(envCfg, flags),
+		fileStoragePath: filePathValue(envCfg, flags),
+		databaseDSN:     databaseDSNValue(envCfg, flags),
+	}
+}
+
 func (cfg config) Addr() string {
 	return cfg.addr
 }
@@ -40,18 +52,6 @@ func (cfg config) FileStoragePath() string {
 
 func (cfg config) DatabaseDSN() string {
 	return cfg.databaseDSN
-}
-
-func NewConfig() Config {
-	envCfg := newEnvConfig()
-	flags := newFlagsValue()
-
-	return &config{
-		addr:            addrValue(envCfg, flags),
-		baseReturnedURL: baseURLValue(envCfg, flags),
-		fileStoragePath: filePathValue(envCfg, flags),
-		databaseDSN:     databaseDSNValue(envCfg, flags),
-	}
 }
 
 func addrValue(envCfg envConfig, flags flagsValue) string {

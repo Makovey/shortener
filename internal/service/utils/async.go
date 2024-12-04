@@ -32,8 +32,8 @@ func FanOut[T any](ctx context.Context, numWorkers int, work func(ctx context.Co
 	return channels
 }
 
-func FanIn[T any](ctx context.Context, resultChs ...chan T) chan T {
-	finalCh := make(chan T)
+func FanIn[T any](ctx context.Context, bufSize int, resultChs ...chan T) chan T {
+	finalCh := make(chan T, bufSize)
 
 	var wg sync.WaitGroup
 

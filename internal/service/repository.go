@@ -8,9 +8,9 @@ import (
 )
 
 type Shortener interface {
-	Store(shortURL, longURL, userID string) error
-	Get(shortURL, userID string) (repoModel.ShortenGet, error)
-	StoreBatch(models []model.ShortenBatch, userID string) error
-	GetAll(userID string) ([]model.ShortenBatch, error)
-	DeleteUsersURL(ctx context.Context, userID string, url string) error
+	SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error
+	GetFullURL(ctx context.Context, shortURL, userID string) (repoModel.UserURL, error)
+	SaveUserURLs(ctx context.Context, models []model.ShortenBatch, userID string) error
+	GetUserURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error)
+	MarkURLAsDeleted(ctx context.Context, userID string, url string) error
 }

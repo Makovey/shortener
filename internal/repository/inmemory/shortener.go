@@ -15,6 +15,13 @@ type repo struct {
 	mu      sync.RWMutex
 }
 
+func NewRepositoryInMemory() service.Shortener {
+	return &repo{
+		storage: make([]storage, 0),
+		mu:      sync.RWMutex{},
+	}
+}
+
 type storage struct {
 	originalURL string
 	shortURL    string
@@ -22,7 +29,7 @@ type storage struct {
 	isDeleted   bool
 }
 
-func (r *repo) Store(shortURL, longURL, userID string) error {
+func (r *repo) SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -30,20 +37,20 @@ func (r *repo) Store(shortURL, longURL, userID string) error {
 	return nil
 }
 
-func (r *repo) Get(shortURL, userID string) (repoModel.ShortenGet, error) {
+func (r *repo) GetFullURL(ctx context.Context, shortURL, userID string) (repoModel.UserURL, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	for _, row := range r.storage {
 		if row.shortURL == shortURL {
-			return repoModel.ShortenGet{OriginalURL: row.originalURL, IsDeleted: row.isDeleted}, nil
+			return repoModel.UserURL{OriginalURL: row.originalURL, IsDeleted: row.isDeleted}, nil
 		}
 	}
 
-	return repoModel.ShortenGet{}, repository.ErrURLNotFound
+	return repoModel.UserURL{}, repository.ErrURLNotFound
 }
 
-func (r *repo) StoreBatch(models []model.ShortenBatch, userID string) error {
+func (r *repo) SaveUserURLs(ctx context.Context, models []model.ShortenBatch, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -54,7 +61,7 @@ func (r *repo) StoreBatch(models []model.ShortenBatch, userID string) error {
 	return nil
 }
 
-func (r *repo) GetAll(userID string) ([]model.ShortenBatch, error) {
+func (r *repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -66,7 +73,7 @@ func (r *repo) GetAll(userID string) ([]model.ShortenBatch, error) {
 	return models, nil
 }
 
-func (r *repo) DeleteUsersURL(ctx context.Context, userID string, url string) error {
+func (r *repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -77,11 +84,4 @@ func (r *repo) DeleteUsersURL(ctx context.Context, userID string, url string) er
 	}
 
 	return nil
-}
-
-func NewRepositoryInMemory() service.Shortener {
-	return &repo{
-		storage: make([]storage, 0),
-		mu:      sync.RWMutex{},
-	}
 }

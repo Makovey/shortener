@@ -18,6 +18,13 @@ type flagsValue struct {
 	databaseDSN     string
 }
 
+func newFlagsValue() flagsValue {
+	var f flagsValue
+	f.parseFlagsIfNeeded()
+
+	return f
+}
+
 func (v *flagsValue) parseFlagsIfNeeded() {
 	if flag.Lookup(flagAddr) == nil {
 		flag.StringVar(&v.addr, flagAddr, "", "the address to listen on for HTTP requests")
@@ -42,11 +49,4 @@ func (v *flagsValue) parseFlagsIfNeeded() {
 	}
 
 	flag.Parse()
-}
-
-func newFlagsValue() flagsValue {
-	var f flagsValue
-	f.parseFlagsIfNeeded()
-
-	return f
 }

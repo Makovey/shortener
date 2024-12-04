@@ -4,17 +4,16 @@ import (
 	"context"
 
 	"github.com/Makovey/shortener/internal/api/model"
-	repoModel "github.com/Makovey/shortener/internal/repository/model"
 )
 
 type Shortener interface {
-	Short(url, userID string) (string, error)
-	Get(shortURL, userID string) (repoModel.ShortenGet, error)
-	ShortBatch(batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error)
-	GetAll(userID string) ([]model.ShortenBatch, error)
-	DeleteUsersURLS(ctx context.Context, userID string, shortURLs []string) []error
+	Shorten(ctx context.Context, url, userID string) (string, error)
+	GetFullURL(ctx context.Context, shortURL, userID string) (model.UserFullURL, error)
+	ShortBatch(ctx context.Context, batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error)
+	GetAllURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error)
+	DeleteUsersURLs(ctx context.Context, userID string, shortURLs []string) []error
 }
 
 type Checker interface {
-	CheckPing() error
+	CheckPing(ctx context.Context) error
 }

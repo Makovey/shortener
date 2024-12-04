@@ -15,6 +15,10 @@ var allowedCompress = []string{
 
 type Compressor struct{}
 
+func NewCompressor() Compressor {
+	return Compressor{}
+}
+
 func (c Compressor) Compress(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ow := w
@@ -41,13 +45,13 @@ func (c Compressor) Compress(next http.Handler) http.Handler {
 	})
 }
 
-func NewCompressor() Compressor {
-	return Compressor{}
-}
-
 type compressWriter struct {
 	w  http.ResponseWriter
 	gw *gzip.Writer
+}
+
+func newCompressWriter(w http.ResponseWriter) *compressWriter {
+	return &compressWriter{w: w, gw: gzip.NewWriter(w)}
 }
 
 func (c *compressWriter) Write(p []byte) (int, error) {
@@ -70,13 +74,17 @@ func (c *compressWriter) Close() error {
 	return c.gw.Close()
 }
 
-func newCompressWriter(w http.ResponseWriter) *compressWriter {
-	return &compressWriter{w: w, gw: gzip.NewWriter(w)}
-}
-
 type compressReader struct {
 	r  io.ReadCloser
 	gr *gzip.Reader
+}
+
+func newCompressReader(r io.ReadCloser) (*compressReader, error) {
+	gr, err := gzip.NewReader(r)
+	if err != nil {
+		return nil, err
+	}
+	return &compressReader{r: r, gr: gr}, nil
 }
 
 func (c *compressReader) Read(p []byte) (n int, err error) {
@@ -88,12 +96,4 @@ func (c *compressReader) Close() error {
 		return err
 	}
 	return c.gr.Close()
-}
-
-func newCompressReader(r io.ReadCloser) (*compressReader, error) {
-	gr, err := gzip.NewReader(r)
-	if err != nil {
-		return nil, err
-	}
-	return &compressReader{r: r, gr: gr}, nil
 }

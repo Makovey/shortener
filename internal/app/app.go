@@ -9,6 +9,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Makovey/shortener/internal/middleware"
+	"github.com/Makovey/shortener/internal/middleware/utils"
 )
 
 type App struct {
@@ -26,7 +27,9 @@ func (a *App) Run() {
 func (a *App) initRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.NewLogger(a.dependencyProvider.Logger()).Logger)
-	r.Use(middleware.NewJWTHandler(a.dependencyProvider.Logger()).JWTHandler)
+
+	jwtMiddleware := middleware.NewAuthHandler(a.dependencyProvider.Logger(), utils.NewJWTUtils(a.dependencyProvider.Logger()))
+	r.Use(jwtMiddleware.AuthHandler)
 	r.Use(middleware.NewCompressor().Compress)
 	r.Use(chiMiddleware.Recoverer)
 

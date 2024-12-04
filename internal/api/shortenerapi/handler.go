@@ -15,16 +15,33 @@ import (
 	"github.com/Makovey/shortener/internal/repository"
 )
 
+const (
+	uuidLength         = 36
+	reloginAndTryAgain = "please, relogin again, to get access to this resource"
+)
+
 type handler struct {
 	service def.Shortener
 	checker def.Checker
 	logger  logger.Logger
 }
 
+func NewShortenerHandler(
+	service def.Shortener,
+	logger logger.Logger,
+	checker def.Checker,
+) def.HTTPHandler {
+	return &handler{
+		service: service,
+		logger:  logger,
+		checker: checker,
+	}
+}
+
 func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
-	if userID == "" {
-		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
 		return
 	}
 
@@ -41,7 +58,7 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(string(longURL), userID)
+	short, err := h.service.Shorten(r.Context(), string(longURL), userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
@@ -59,8 +76,8 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
-	if userID == "" {
-		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
 		return
 	}
 
@@ -70,7 +87,7 @@ func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m, err := h.service.Get(shortURL, userID)
+	m, err := h.service.GetFullURL(r.Context(), shortURL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponse(w, http.StatusBadRequest, err.Error())
@@ -88,8 +105,8 @@ func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
-	if userID == "" {
-		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
 		return
 	}
 
@@ -114,7 +131,7 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(req.URL, userID)
+	short, err := h.service.Shorten(r.Context(), req.URL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
@@ -130,7 +147,7 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
-	err := h.checker.CheckPing()
+	err := h.checker.CheckPing(r.Context())
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Ping error: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -142,8 +159,8 @@ func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
-	if userID == "" {
-		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
 		return
 	}
 
@@ -168,7 +185,7 @@ func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.ShortBatch(req, userID)
+	resp, err := h.service.ShortBatch(r.Context(), req, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
@@ -181,12 +198,12 @@ func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
-	if userID == "" {
-		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
 		return
 	}
 
-	models, err := h.service.GetAll(userID)
+	models, err := h.service.GetAllURLs(r.Context(), userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponseWithError(w, http.StatusBadRequest, "internal server error")
@@ -204,8 +221,8 @@ func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
 
 func (h handler) DeleteURLS(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
-	if userID == "" {
-		h.writeResponseWithError(w, http.StatusUnauthorized, "unauthorized")
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
 		return
 	}
 
@@ -224,7 +241,13 @@ func (h handler) DeleteURLS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleteErrors := h.service.DeleteUsersURLS(r.Context(), userID, ids)
+	if len(ids) == 0 {
+		h.logger.Info("can't delete urls, request body is empty")
+		h.writeResponseWithError(w, http.StatusBadRequest, "body is empty")
+		return
+	}
+
+	deleteErrors := h.service.DeleteUsersURLs(r.Context(), userID, ids)
 
 	for _, err = range deleteErrors {
 		if err != nil {
@@ -241,16 +264,4 @@ func getUserIDFromContext(ctx context.Context) string {
 	}
 
 	return ctx.Value(middleware.CtxUserIDKey).(string)
-}
-
-func NewShortenerHandler(
-	service def.Shortener,
-	logger logger.Logger,
-	checker def.Checker,
-) def.HTTPHandler {
-	return &handler{
-		service: service,
-		logger:  logger,
-		checker: checker,
-	}
 }

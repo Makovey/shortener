@@ -1,6 +1,6 @@
 package model
 
-type ShortenGet struct {
+type UserURL struct {
 	OriginalURL string
 	IsDeleted   bool
 }

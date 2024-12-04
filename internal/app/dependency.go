@@ -3,6 +3,8 @@ package app
 import (
 	"io"
 
+	"database/sql/driver"
+
 	"github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/shortenerapi"
 	"github.com/Makovey/shortener/internal/closer"
@@ -24,7 +26,7 @@ type dependencyProvider struct {
 	shortRepo service.Shortener
 	shorSrv   api.Shortener
 	checker   api.Checker
-	pinger    service.Pinger
+	pinger    driver.Pinger
 
 	Closer closer.Closer
 }
@@ -87,8 +89,8 @@ func (p *dependencyProvider) Checker() api.Checker {
 	return p.checker
 }
 
-func (p *dependencyProvider) Pinger() service.Pinger {
-	if pinger, ok := p.ShortenerRepository().(service.Pinger); ok {
+func (p *dependencyProvider) Pinger() driver.Pinger {
+	if pinger, ok := p.ShortenerRepository().(driver.Pinger); ok {
 		p.pinger = pinger
 	} else {
 		p.pinger = postgres.NewPingerRepo(p.Config())

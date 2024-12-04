@@ -1,12 +1,14 @@
 package api
 
-type dummyChecker struct {
-}
+import "context"
 
-func (s *dummyChecker) CheckPing() error {
-	return nil
+type dummyChecker struct {
 }
 
 func NewDummyChecker() Checker {
 	return &dummyChecker{}
+}
+
+func (s *dummyChecker) CheckPing(ctx context.Context) error {
+	return nil
 }
