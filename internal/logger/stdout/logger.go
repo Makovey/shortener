@@ -17,26 +17,6 @@ type loggerStdout struct {
 	log *logrus.Logger
 }
 
-func (l loggerStdout) Info(msg string, args ...string) {
-	fields := makeFieldsFromArgs(args...)
-	l.log.WithFields(fields).Infoln(msg)
-}
-
-func (l loggerStdout) Error(msg string, args ...string) {
-	fields := makeFieldsFromArgs(args...)
-	l.log.WithFields(fields).Errorln(msg)
-}
-
-func (l loggerStdout) Debug(msg string, args ...string) {
-	fields := makeFieldsFromArgs(args...)
-	l.log.WithFields(fields).Debugln(msg)
-}
-
-func (l loggerStdout) Warning(msg string, args ...string) {
-	fields := makeFieldsFromArgs(args...)
-	l.log.WithFields(fields).Warningln(msg)
-}
-
 func NewLoggerStdout(env string) def.Logger {
 	var log *logrus.Logger
 
@@ -65,6 +45,26 @@ func NewLoggerStdout(env string) def.Logger {
 	}
 
 	return &loggerStdout{log: log}
+}
+
+func (l loggerStdout) Info(msg string, args ...string) {
+	fields := makeFieldsFromArgs(args...)
+	l.log.WithFields(fields).Infoln(msg)
+}
+
+func (l loggerStdout) Error(msg string, args ...string) {
+	fields := makeFieldsFromArgs(args...)
+	l.log.WithFields(fields).Errorln(msg)
+}
+
+func (l loggerStdout) Debug(msg string, args ...string) {
+	fields := makeFieldsFromArgs(args...)
+	l.log.WithFields(fields).Debugln(msg)
+}
+
+func (l loggerStdout) Warning(msg string, args ...string) {
+	fields := makeFieldsFromArgs(args...)
+	l.log.WithFields(fields).Warningln(msg)
 }
 
 func makeFieldsFromArgs(args ...string) logrus.Fields {

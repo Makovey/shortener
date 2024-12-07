@@ -1,6 +1,6 @@
 module github.com/Makovey/shortener
 
-go 1.22.4
+go 1.22.2
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

@@ -12,6 +12,10 @@ type Logger struct {
 	log logger.Logger
 }
 
+func NewLogger(log logger.Logger) Logger {
+	return Logger{log: log}
+}
+
 func (l Logger) Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tm := time.Now()
@@ -28,10 +32,6 @@ func (l Logger) Logger(next http.Handler) http.Handler {
 
 		next.ServeHTTP(&ww, r)
 	})
-}
-
-func NewLogger(log logger.Logger) Logger {
-	return Logger{log: log}
 }
 
 type wrappedResponseWriter struct {

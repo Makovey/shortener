@@ -1,6 +1,7 @@
 package shortenerapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +11,13 @@ import (
 	def "github.com/Makovey/shortener/internal/api"
 	"github.com/Makovey/shortener/internal/api/model"
 	"github.com/Makovey/shortener/internal/logger"
+	"github.com/Makovey/shortener/internal/middleware"
 	"github.com/Makovey/shortener/internal/repository"
+)
+
+const (
+	uuidLength         = 36
+	reloginAndTryAgain = "please, relogin again, to get access to this resource"
 )
 
 type handler struct {
@@ -19,7 +26,25 @@ type handler struct {
 	logger  logger.Logger
 }
 
+func NewShortenerHandler(
+	service def.Shortener,
+	logger logger.Logger,
+	checker def.Checker,
+) def.HTTPHandler {
+	return &handler{
+		service: service,
+		logger:  logger,
+		checker: checker,
+	}
+}
+
 func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
+		return
+	}
+
 	longURL, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Can't read request body, cause: %s", err.Error()))
@@ -33,7 +58,7 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(string(longURL))
+	short, err := h.service.Shorten(r.Context(), string(longURL), userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
@@ -50,24 +75,41 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
+		return
+	}
+
 	shortURL := r.PathValue("id")
 	if len(shortURL) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	longURL, err := h.service.Get(shortURL)
+	m, err := h.service.GetFullURL(r.Context(), shortURL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	w.Header().Add("Location", longURL)
+	if m.IsDeleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+
+	w.Header().Add("Location", m.OriginalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
 func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
@@ -89,7 +131,7 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Short(req.URL)
+	short, err := h.service.Shorten(r.Context(), req.URL, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
@@ -105,7 +147,7 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
-	err := h.checker.CheckPing()
+	err := h.checker.CheckPing(r.Context())
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Ping error: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -116,6 +158,12 @@ func (h handler) GetPing(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
@@ -137,7 +185,7 @@ func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.ShortBatch(req)
+	resp, err := h.service.ShortBatch(r.Context(), req, userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
@@ -148,14 +196,72 @@ func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	h.writeResponse(w, http.StatusCreated, resp)
 }
 
-func NewShortenerHandler(
-	service def.Shortener,
-	logger logger.Logger,
-	checker def.Checker,
-) def.HTTPHandler {
-	return &handler{
-		service: service,
-		logger:  logger,
-		checker: checker,
+func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
+		return
 	}
+
+	models, err := h.service.GetAllURLs(r.Context(), userID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		h.writeResponseWithError(w, http.StatusBadRequest, "internal server error")
+		return
+	}
+
+	h.logger.Info(fmt.Sprintf("get all processed queried successfully with length: %d", len(models)))
+	if len(models) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	h.writeResponse(w, http.StatusOK, models)
+}
+
+func (h handler) DeleteURLS(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == "" || len(userID) != uuidLength {
+		h.writeResponseWithError(w, http.StatusBadRequest, reloginAndTryAgain)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't read request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	var ids []string
+	err = json.Unmarshal(body, &ids)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("can't unmarshal request body, cause: %s", err.Error()))
+		h.writeResponseWithError(w, http.StatusBadRequest, "body is invalid")
+		return
+	}
+
+	if len(ids) == 0 {
+		h.logger.Info("can't delete urls, request body is empty")
+		h.writeResponseWithError(w, http.StatusBadRequest, "body is empty")
+		return
+	}
+
+	deleteErrors := h.service.DeleteUsersURLs(r.Context(), userID, ids)
+
+	for _, err = range deleteErrors {
+		if err != nil {
+			h.logger.Error(err.Error())
+		}
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func getUserIDFromContext(ctx context.Context) string {
+	if ctx.Value(middleware.CtxUserIDKey) == nil {
+		return ""
+	}
+
+	return ctx.Value(middleware.CtxUserIDKey).(string)
 }
