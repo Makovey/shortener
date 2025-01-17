@@ -1,4 +1,4 @@
-package disc
+package model
 
 type ShortenerURL struct {
 	UUID        string `json:"uuid"`

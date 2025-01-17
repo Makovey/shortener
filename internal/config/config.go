@@ -1,6 +1,10 @@
 package config
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/Makovey/shortener/internal/logger"
+)
 
 // Config methods:
 // Addr - returned address of launching server
@@ -26,16 +30,25 @@ type config struct {
 	databaseDSN     string
 }
 
-func NewConfig() Config {
+func NewConfig(
+	log logger.Logger,
+) Config {
 	envCfg := newEnvConfig()
 	flags := newFlagsValue()
 
-	return &config{
-		addr:            addrValue(envCfg, flags),
-		baseReturnedURL: baseURLValue(envCfg, flags),
-		fileStoragePath: filePathValue(envCfg, flags),
-		databaseDSN:     databaseDSNValue(envCfg, flags),
+	cfg := &config{
+		addr:            resolveValue(envCfg.Addr, flags.addr, defaultAddr),
+		baseReturnedURL: resolveValue(envCfg.BaseReturnedURL, flags.baseReturnedURL, defaultBaseURL),
+		fileStoragePath: resolveValue(envCfg.FileStoragePath, flags.fileStoragePath, ""),
+		databaseDSN:     resolveDatabaseURI(envCfg.DatabaseDSN, flags.databaseDSN),
 	}
+
+	log.Debug("Addr: " + cfg.addr)
+	log.Debug("BaseReturnedURL: " + cfg.addr)
+	log.Debug("FileStoragePath: " + cfg.addr)
+	log.Debug("DatabaseDSN: " + cfg.addr)
+
+	return cfg
 }
 
 func (cfg config) Addr() string {
@@ -54,50 +67,22 @@ func (cfg config) DatabaseDSN() string {
 	return cfg.databaseDSN
 }
 
-func addrValue(envCfg envConfig, flags flagsValue) string {
-	addr := defaultAddr
-	if envAddr := envCfg.Addr; envAddr != "" {
-		addr = envAddr
-	} else if flagAddr := flags.addr; flagAddr != "" {
-		addr = flags.addr
+func resolveValue(envValue, flagValue, defaultValue string) string {
+	if envValue != "" {
+		return envValue
 	}
 
-	return addr
+	if flagValue != "" {
+		return flagValue
+	}
+
+	return defaultValue
 }
 
-func baseURLValue(envCfg envConfig, flags flagsValue) string {
-	baseReturnedURL := defaultBaseURL
-	if envBase := envCfg.BaseReturnedURL; envBase != "" {
-		baseReturnedURL = envBase
-	} else if flagBaseURL := flags.baseReturnedURL; flagBaseURL != "" {
-		baseReturnedURL = flags.baseReturnedURL
+func resolveDatabaseURI(envValue, flagValue string) string {
+	dsn := resolveValue(envValue, flagValue, "")
+	if dsn != "" && !strings.Contains(dsn, "?sslmode=disable") {
+		dsn += "?sslmode=disable"
 	}
-
-	return baseReturnedURL
-}
-
-func filePathValue(envCfg envConfig, flags flagsValue) string {
-	var urlPath string
-	if envStoragePath := envCfg.FileStoragePath; envStoragePath != "" {
-		urlPath = envStoragePath
-	} else if flagPath := flags.fileStoragePath; flagPath != "" {
-		urlPath = flags.fileStoragePath
-	}
-
-	return urlPath
-}
-
-func databaseDSNValue(envCfg envConfig, flags flagsValue) string {
-	var databaseDSN string
-	if envDSN := envCfg.DatabaseDSN; envDSN != "" {
-		databaseDSN = envDSN
-	} else if flagDSN := flags.databaseDSN; flagDSN != "" {
-		databaseDSN = flagDSN
-	}
-
-	if databaseDSN != "" && !strings.Contains(databaseDSN, "?sslmode=disable") {
-		databaseDSN = databaseDSN + "?sslmode=disable"
-	}
-
-	return databaseDSN
+	return dsn
 }

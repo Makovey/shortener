@@ -4,21 +4,21 @@ import (
 	"context"
 	"errors"
 
-	def "github.com/Makovey/shortener/internal/api"
-	"github.com/Makovey/shortener/internal/api/model"
+	comModel "github.com/Makovey/shortener/internal/service/model"
+	"github.com/Makovey/shortener/internal/transport/model"
 )
 
-type mockService struct {
+type MockService struct {
 	isErrorNeeded bool
 }
 
-func NewMockService(isErrorNeeded bool) def.Shortener {
-	return &mockService{
+func NewMockService(isErrorNeeded bool) *MockService {
+	return &MockService{
 		isErrorNeeded: isErrorNeeded,
 	}
 }
 
-func (m *mockService) Shorten(ctx context.Context, url, userID string) (string, error) {
+func (m *MockService) Shorten(ctx context.Context, url, userID string) (string, error) {
 	if m.isErrorNeeded {
 		return "", errors.New("mock error")
 	}
@@ -26,7 +26,7 @@ func (m *mockService) Shorten(ctx context.Context, url, userID string) (string, 
 	return "a1b2c3", nil
 }
 
-func (m *mockService) GetFullURL(ctx context.Context, shortURL, userID string) (model.UserFullURL, error) {
+func (m *MockService) GetFullURL(ctx context.Context, shortURL, userID string) (model.UserFullURL, error) {
 	if m.isErrorNeeded {
 		return model.UserFullURL{}, errors.New("mock error")
 	}
@@ -34,7 +34,7 @@ func (m *mockService) GetFullURL(ctx context.Context, shortURL, userID string) (
 	return model.UserFullURL{OriginalURL: "https://github.com", IsDeleted: false}, nil
 }
 
-func (m *mockService) ShortBatch(ctx context.Context, batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error) {
+func (m *MockService) ShortBatch(ctx context.Context, batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error) {
 	if m.isErrorNeeded {
 		return nil, errors.New("mock error")
 	}
@@ -47,12 +47,12 @@ func (m *mockService) ShortBatch(ctx context.Context, batch []model.ShortenBatch
 	}, nil
 }
 
-func (m *mockService) GetAllURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error) {
+func (m *MockService) GetAllURLs(ctx context.Context, userID string) ([]comModel.ShortenBatch, error) {
 	if m.isErrorNeeded {
 		return nil, errors.New("mock error")
 	}
 
-	return []model.ShortenBatch{
+	return []comModel.ShortenBatch{
 		{
 			ShortURL:    "a1b2c3",
 			OriginalURL: "https://github.com",
@@ -64,7 +64,7 @@ func (m *mockService) GetAllURLs(ctx context.Context, userID string) ([]model.Sh
 	}, nil
 }
 
-func (m *mockService) DeleteUsersURLs(ctx context.Context, userID string, shortURLs []string) []error {
+func (m *MockService) DeleteUsersURLs(ctx context.Context, userID string, shortURLs []string) []error {
 	if m.isErrorNeeded {
 		return []error{errors.New("mock error")}
 	}

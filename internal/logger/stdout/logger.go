@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	envDev  = "dev"
-	envProd = "prod"
+	EnvDev   = "dev"
+	EnvProd  = "prod"
+	EnvLocal = "local"
 )
 
 type loggerStdout struct {
@@ -21,13 +22,13 @@ func NewLoggerStdout(env string) def.Logger {
 	var log *logrus.Logger
 
 	switch env {
-	case envDev:
+	case EnvDev:
 		log = &logrus.Logger{
 			Out:       os.Stdout,
 			Formatter: new(logrus.JSONFormatter),
 			Level:     logrus.DebugLevel,
 		}
-	case envProd:
+	case EnvProd:
 		log = &logrus.Logger{
 			Out:       os.Stdout,
 			Formatter: new(logrus.JSONFormatter),

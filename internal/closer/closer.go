@@ -8,6 +8,10 @@ type Closer struct {
 	closers []io.Closer
 }
 
+func NewCloser() *Closer {
+	return &Closer{make([]io.Closer, 0)}
+}
+
 func (c *Closer) Add(closer io.Closer) {
 	c.closers = append(c.closers, closer)
 }
