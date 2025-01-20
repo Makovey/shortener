@@ -17,7 +17,7 @@ import (
 
 type Repository interface {
 	SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error
-	GetFullURL(ctx context.Context, shortURL, userID string) (repoModel.UserURL, error)
+	GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error)
 	SaveUserURLs(ctx context.Context, models []comModel.ShortenBatch, userID string) error
 	GetUserURLs(ctx context.Context, userID string) ([]comModel.ShortenBatch, error)
 	MarkURLAsDeleted(ctx context.Context, userID string, url string) error

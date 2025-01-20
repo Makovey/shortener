@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
@@ -18,6 +19,8 @@ func (a *App) initRouter() http.Handler {
 	r.Use(jwtMiddleware.AuthHandler)
 	r.Use(middleware.NewCompressor().Compress)
 	r.Use(chiMiddleware.Recoverer)
+
+	r.Mount("/debug", chiMiddleware.Profiler())
 
 	r.Post("/", a.handler.PostNewURL)
 	r.Get("/{id}", a.handler.GetURL)

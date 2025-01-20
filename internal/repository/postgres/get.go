@@ -11,7 +11,7 @@ import (
 	"github.com/Makovey/shortener/internal/service/model"
 )
 
-func (r *Repo) GetFullURL(ctx context.Context, shortURL, userID string) (repoModel.UserURL, error) {
+func (r *Repo) GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error) {
 	fn := "postgres.GetFullURL"
 
 	row := r.db.QueryRowContext(
@@ -23,10 +23,10 @@ func (r *Repo) GetFullURL(ctx context.Context, shortURL, userID string) (repoMod
 	var url repoModel.UserURL
 	err := row.Scan(&url.OriginalURL, &url.IsDeleted)
 	if errors.Is(err, sql.ErrNoRows) {
-		return repoModel.UserURL{}, fmt.Errorf("[%s]: %w", fn, repository.ErrURLNotFound)
+		return nil, fmt.Errorf("[%s]: %w", fn, repository.ErrURLNotFound)
 	}
 
-	return url, nil
+	return &url, nil
 }
 
 func (r *Repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error) {
