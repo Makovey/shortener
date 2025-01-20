@@ -6,7 +6,7 @@ import (
 	"github.com/Makovey/shortener/internal/service/model"
 )
 
-func (r *repo) SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error {
+func (r *Repo) SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -14,7 +14,7 @@ func (r *repo) SaveUserURL(ctx context.Context, shortURL, longURL, userID string
 	return nil
 }
 
-func (r *repo) SaveUserURLs(ctx context.Context, models []model.ShortenBatch, userID string) error {
+func (r *Repo) SaveUserURLs(ctx context.Context, models []model.ShortenBatch, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

@@ -42,8 +42,8 @@ func NewChecker(pingerRepo driver.Pinger) *Service {
 	return &Service{pinger: pingerRepo}
 }
 
-func (s *Service) Shorten(ctx context.Context, url, userID string) (string, error) {
-	fn := "shortener.Shorten"
+func (s *Service) CreateShortURL(ctx context.Context, url, userID string) (string, error) {
+	fn := "shortener.CreateShortURL"
 
 	shortURL := s.generateShortURL(url)
 	err := s.repo.SaveUserURL(ctx, shortURL, url, userID)

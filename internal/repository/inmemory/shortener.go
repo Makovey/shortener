@@ -2,17 +2,15 @@ package inmemory
 
 import (
 	"sync"
-
-	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
-type repo struct {
+type Repo struct {
 	storage []storage
 	mu      sync.RWMutex
 }
 
-func NewRepositoryInMemory() shortener.Repository {
-	return &repo{
+func NewRepositoryInMemory() *Repo {
+	return &Repo{
 		storage: make([]storage, 0),
 		mu:      sync.RWMutex{},
 	}

@@ -16,7 +16,7 @@ const (
 )
 
 type Service interface {
-	Shorten(ctx context.Context, url, userID string) (string, error)
+	CreateShortURL(ctx context.Context, url, userID string) (string, error)
 	GetFullURL(ctx context.Context, shortURL, userID string) (model.UserFullURL, error)
 	ShortBatch(ctx context.Context, batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error)
 	GetAllURLs(ctx context.Context, userID string) ([]comModel.ShortenBatch, error)

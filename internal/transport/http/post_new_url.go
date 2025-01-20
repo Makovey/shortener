@@ -31,7 +31,7 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := h.service.Shorten(r.Context(), string(longURL), userID)
+	short, err := h.service.CreateShortURL(r.Context(), string(longURL), userID)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {

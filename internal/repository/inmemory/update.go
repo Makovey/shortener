@@ -2,7 +2,7 @@ package inmemory
 
 import "context"
 
-func (r *repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) error {
+func (r *Repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

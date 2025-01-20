@@ -18,7 +18,7 @@ func NewMockService(isErrorNeeded bool) *MockService {
 	}
 }
 
-func (m *MockService) Shorten(ctx context.Context, url, userID string) (string, error) {
+func (m *MockService) CreateShortURL(ctx context.Context, url, userID string) (string, error) {
 	if m.isErrorNeeded {
 		return "", errors.New("mock error")
 	}

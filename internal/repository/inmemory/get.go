@@ -9,7 +9,7 @@ import (
 	"github.com/Makovey/shortener/internal/service/model"
 )
 
-func (r *repo) GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error) {
+func (r *Repo) GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error) {
 	fn := "inmemory.GetFullURL"
 
 	r.mu.RLock()
@@ -24,7 +24,7 @@ func (r *repo) GetFullURL(ctx context.Context, shortURL, userID string) (*repoMo
 	return nil, fmt.Errorf("[%s]: %w", fn, repository.ErrURLNotFound)
 }
 
-func (r *repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error) {
+func (r *Repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
