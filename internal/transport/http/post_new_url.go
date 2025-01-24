@@ -42,7 +42,7 @@ func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

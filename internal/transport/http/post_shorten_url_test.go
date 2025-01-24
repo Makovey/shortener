@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,20 +12,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Makovey/shortener/internal/config"
-	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/logger/stdout"
 	"github.com/Makovey/shortener/internal/middleware"
-	"github.com/Makovey/shortener/internal/service/dummy"
+	"github.com/Makovey/shortener/internal/repository"
+	"github.com/Makovey/shortener/internal/service/mock"
 	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
 func TestPostShortenHandler(t *testing.T) {
 	type dependencies struct {
 		service Service
-		logger  logger.Logger
-		config  config.Config
-		checker Checker
 	}
 
 	type want struct {
@@ -33,7 +30,8 @@ func TestPostShortenHandler(t *testing.T) {
 	}
 
 	type parameters struct {
-		body io.Reader
+		body   io.Reader
+		userID string
 	}
 
 	tests := []struct {
@@ -43,17 +41,15 @@ func TestPostShortenHandler(t *testing.T) {
 		want         want
 	}{
 		{
-			name: "successful post transport shorten",
+			name: "successful post api shorten",
 			dependencies: dependencies{
-				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerDummy(),
-				config:  config.NewConfig(stdout.NewLoggerDummy()),
-				checker: dummy.NewDummyChecker(),
+				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
 					"url": "https://github.com",
 				})),
+				userID: uuid.NewString(),
 			},
 			want: want{
 				code:         http.StatusCreated,
@@ -61,17 +57,15 @@ func TestPostShortenHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "successful post transport shorten",
+			name: "successful post api shorten",
 			dependencies: dependencies{
-				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerDummy(),
-				config:  config.NewConfig(stdout.NewLoggerDummy()),
-				checker: dummy.NewDummyChecker(),
+				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
 					"url": "https://github.com",
 				})),
+				userID: uuid.NewString(),
 			},
 			want: want{
 				code:         http.StatusCreated,
@@ -81,13 +75,11 @@ func TestPostShortenHandler(t *testing.T) {
 		{
 			name: "failed post new url: error with reader",
 			dependencies: dependencies{
-				service: shortener.NewMockService(true),
-				logger:  stdout.NewLoggerDummy(),
-				config:  config.NewConfig(stdout.NewLoggerDummy()),
-				checker: dummy.NewDummyChecker(),
+				service: shortener.NewMockService(errors.New("test error"), nil),
 			},
 			parameters: parameters{
-				body: errReader(0),
+				body:   errReader(0),
+				userID: uuid.NewString(),
 			},
 			want: want{
 				code:         http.StatusInternalServerError,
@@ -97,15 +89,13 @@ func TestPostShortenHandler(t *testing.T) {
 		{
 			name: "failed post new url: invalid body",
 			dependencies: dependencies{
-				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerDummy(),
-				config:  config.NewConfig(stdout.NewLoggerDummy()),
-				checker: dummy.NewDummyChecker(),
+				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
 					"url": 1234567890,
 				})),
+				userID: uuid.NewString(),
 			},
 			want: want{
 				code:         http.StatusBadRequest,
@@ -115,10 +105,55 @@ func TestPostShortenHandler(t *testing.T) {
 		{
 			name: "failed post new url: empty body",
 			dependencies: dependencies{
-				service: shortener.NewMockService(false),
-				logger:  stdout.NewLoggerDummy(),
-				config:  config.NewConfig(stdout.NewLoggerDummy()),
-				checker: dummy.NewDummyChecker(),
+				service: shortener.NewMockService(nil, nil),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": "",
+				})),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code:         http.StatusBadRequest,
+				containsBody: "error",
+			},
+		},
+		{
+			name: "failed post new url: service error",
+			dependencies: dependencies{
+				service: shortener.NewMockService(errors.New("test error"), nil),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": "https://github.com",
+				})),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code:         http.StatusInternalServerError,
+				containsBody: "error",
+			},
+		},
+		{
+			name: "failed post new url: service error, url already exists",
+			dependencies: dependencies{
+				service: shortener.NewMockService(repository.ErrURLIsAlreadyExists, nil),
+			},
+			parameters: parameters{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"url": "https://github.com",
+				})),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code:         http.StatusConflict,
+				containsBody: "error",
+			},
+		},
+		{
+			name: "failed post new url: empty user id",
+			dependencies: dependencies{
+				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -136,8 +171,8 @@ func TestPostShortenHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			h := NewHTTPHandler(
 				tt.dependencies.service,
-				tt.dependencies.logger,
-				tt.dependencies.checker,
+				stdout.NewLoggerDummy(),
+				mock.NewCheckerMock(nil),
 			)
 
 			r := httptest.NewRequest(http.MethodPost, "/transport/shorten", tt.parameters.body)

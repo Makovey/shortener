@@ -3,8 +3,10 @@ package http
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -14,22 +16,20 @@ import (
 	"github.com/Makovey/shortener/internal/middleware"
 	"github.com/Makovey/shortener/internal/service/mock"
 	"github.com/Makovey/shortener/internal/service/shortener"
-	"github.com/Makovey/shortener/internal/transport/model"
 )
 
-func TestGetURLHandler(t *testing.T) {
+func TestDeleteURLSHandler(t *testing.T) {
 	type dependencies struct {
 		service Service
 	}
 
 	type want struct {
-		code     int
-		location string
+		code int
 	}
 
 	type parameters struct {
-		pathValue string
-		userID    string
+		body   io.Reader
+		userID string
 	}
 
 	tests := []struct {
@@ -39,75 +39,81 @@ func TestGetURLHandler(t *testing.T) {
 		want         want
 	}{
 		{
-			name: "successful get url",
+			name: "successful post batch",
 			dependencies: dependencies{
 				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
-				pathValue: "/a1b2c3",
-				userID:    uuid.NewString(),
+				body:   strings.NewReader(makeList([]string{"1", "2"})),
+				userID: uuid.NewString(),
 			},
 			want: want{
-				code:     http.StatusTemporaryRedirect,
-				location: "https://github.com",
+				code: http.StatusAccepted,
 			},
 		},
 		{
-			name: "successful get url, url already deleted",
-			dependencies: dependencies{
-				service: shortener.NewMockService(nil, model.UserFullURL{
-					OriginalURL: "",
-					IsDeleted:   true,
-				}),
-			},
-			parameters: parameters{
-				pathValue: "/a1b2c3",
-				userID:    uuid.NewString(),
-			},
-			want: want{
-				code:     http.StatusGone,
-				location: "",
-			},
-		},
-		{
-			name: "failed get long url: empty path value",
+			name: "failed to post batch: user id is empty",
 			dependencies: dependencies{
 				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
-				pathValue: "",
-				userID:    uuid.NewString(),
+				body: strings.NewReader(makeList([]string{"1", "2"})),
 			},
 			want: want{
-				code:     http.StatusBadRequest,
-				location: "",
+				code: http.StatusBadRequest,
 			},
 		},
 		{
-			name: "failed get long url: error from service",
+			name: "failed to post batch: error with reader",
+			dependencies: dependencies{
+				service: shortener.NewMockService(nil, nil),
+			},
+			parameters: parameters{
+				body:   errReader(0),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "failed to post batch: error with empty body",
+			dependencies: dependencies{
+				service: shortener.NewMockService(nil, nil),
+			},
+			parameters: parameters{
+				body:   strings.NewReader(""),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "failed to post batch: empty list",
+			dependencies: dependencies{
+				service: shortener.NewMockService(nil, nil),
+			},
+			parameters: parameters{
+				body:   strings.NewReader(makeList([]string{})),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "failed to post batch: service error",
 			dependencies: dependencies{
 				service: shortener.NewMockService(errors.New("test error"), nil),
 			},
 			parameters: parameters{
-				pathValue: "/a1b2c3",
-				userID:    uuid.NewString(),
+
+				body:   strings.NewReader(makeList([]string{"1", "2"})),
+				userID: uuid.NewString(),
 			},
 			want: want{
-				code:     http.StatusBadRequest,
-				location: "",
-			},
-		},
-		{
-			name: "failed get long url: user id is empty",
-			dependencies: dependencies{
-				service: shortener.NewMockService(nil, nil),
-			},
-			parameters: parameters{
-				pathValue: "/a1b2c3",
-			},
-			want: want{
-				code:     http.StatusBadRequest,
-				location: "",
+				code: http.StatusAccepted,
 			},
 		},
 	}
@@ -119,18 +125,16 @@ func TestGetURLHandler(t *testing.T) {
 				mock.NewCheckerMock(nil),
 			)
 
-			r := httptest.NewRequest(http.MethodGet, "/", nil)
-			r.SetPathValue("id", tt.parameters.pathValue)
+			r := httptest.NewRequest(http.MethodDelete, "/api/user/urls", tt.parameters.body)
 			ctx := context.WithValue(r.Context(), middleware.CtxUserIDKey, tt.parameters.userID)
 
 			w := httptest.NewRecorder()
-			h.GetURL(w, r.WithContext(ctx))
+			h.DeleteURLS(w, r.WithContext(ctx))
 
 			res := w.Result()
 			defer res.Body.Close()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
-			assert.Equal(t, tt.want.location, res.Header.Get("Location"))
 		})
 	}
 }

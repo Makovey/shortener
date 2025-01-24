@@ -20,18 +20,18 @@ func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m, err := h.service.GetFullURL(r.Context(), shortURL, userID)
+	url, err := h.service.GetFullURL(r.Context(), shortURL, userID)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("[%s]: %s", fn, err.Error()))
 		h.writeResponse(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
-	if m.IsDeleted {
+	if url.IsDeleted {
 		w.WriteHeader(http.StatusGone)
 		return
 	}
 
-	w.Header().Add("Location", m.OriginalURL)
+	w.Header().Add("Location", url.OriginalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }

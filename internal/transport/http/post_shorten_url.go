@@ -45,7 +45,7 @@ func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, repository.ErrURLIsAlreadyExists) {
-			h.writeResponse(w, http.StatusConflict, model.ShortenResponse{Result: short})
+			h.writeResponseWithError(w, http.StatusConflict, "url already posted")
 			return
 		}
 		h.writeResponseWithError(w, http.StatusInternalServerError, "internal server error")

@@ -17,6 +17,16 @@ func makeJSON(data map[string]any) string {
 	return string(bytes)
 }
 
+func makeArrayJSON(data []map[string]any) string {
+	bytes, _ := json.Marshal(data)
+	return string(bytes)
+}
+
+func makeList(data []string) string {
+	bytes, _ := json.Marshal(data)
+	return string(bytes)
+}
+
 func parseBody(body io.Reader) map[string]any {
 	b, _ := io.ReadAll(body)
 	bodyMap := make(map[string]any)

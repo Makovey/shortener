@@ -11,23 +11,20 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Makovey/shortener/internal/logger/stdout"
 	"github.com/Makovey/shortener/internal/middleware"
-	"github.com/Makovey/shortener/internal/repository"
 	"github.com/Makovey/shortener/internal/service/mock"
 	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
-func TestPostNewURLHandler(t *testing.T) {
+func TestPostBatchHandler(t *testing.T) {
 	type dependencies struct {
 		service Service
 	}
 
 	type want struct {
-		code      int
-		emptyBody bool
+		code int
 	}
 
 	type parameters struct {
@@ -42,35 +39,40 @@ func TestPostNewURLHandler(t *testing.T) {
 		want         want
 	}{
 		{
-			name: "successful post new url",
+			name: "successful post batch",
 			dependencies: dependencies{
 				service: shortener.NewMockService(nil, nil),
 			},
 			parameters: parameters{
-				body:   strings.NewReader("https://github.com"),
+
+				body: strings.NewReader(makeArrayJSON([]map[string]any{
+					{
+						"correlation_id": "1",
+						"original_url":   "https://example.com",
+					},
+					{
+						"correlation_id": "2",
+						"original_url":   "https://github.com",
+					},
+				})),
 				userID: uuid.NewString(),
 			},
 			want: want{
-				code:      http.StatusCreated,
-				emptyBody: false,
+				code: http.StatusCreated,
 			},
 		},
 		{
-			name: "failed post new url: empty body",
+			name: "failed to post batch: user id is empty",
 			dependencies: dependencies{
 				service: shortener.NewMockService(nil, nil),
 			},
-			parameters: parameters{
-				body:   strings.NewReader(""),
-				userID: uuid.NewString(),
-			},
+			parameters: parameters{},
 			want: want{
-				code:      http.StatusBadRequest,
-				emptyBody: true,
+				code: http.StatusBadRequest,
 			},
 		},
 		{
-			name: "failed post new url: error with reader",
+			name: "failed to post batch: error with reader",
 			dependencies: dependencies{
 				service: shortener.NewMockService(nil, nil),
 			},
@@ -79,49 +81,56 @@ func TestPostNewURLHandler(t *testing.T) {
 				userID: uuid.NewString(),
 			},
 			want: want{
-				code:      http.StatusBadRequest,
-				emptyBody: true,
+				code: http.StatusInternalServerError,
 			},
 		},
 		{
-			name: "failed post new url: service error",
+			name: "failed to post batch: error with empty body",
+			dependencies: dependencies{
+				service: shortener.NewMockService(nil, nil),
+			},
+			parameters: parameters{
+				body:   strings.NewReader(""),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "failed to post batch: empty batch",
+			dependencies: dependencies{
+				service: shortener.NewMockService(nil, nil),
+			},
+			parameters: parameters{
+				body:   strings.NewReader(makeArrayJSON([]map[string]any{})),
+				userID: uuid.NewString(),
+			},
+			want: want{
+				code: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "failed to post batch: service error",
 			dependencies: dependencies{
 				service: shortener.NewMockService(errors.New("test error"), nil),
 			},
 			parameters: parameters{
-				body:   strings.NewReader("https://github.com"),
+
+				body: strings.NewReader(makeArrayJSON([]map[string]any{
+					{
+						"correlation_id": "1",
+						"original_url":   "https://example.com",
+					},
+					{
+						"correlation_id": "2",
+						"original_url":   "https://github.com",
+					},
+				})),
 				userID: uuid.NewString(),
 			},
 			want: want{
-				code:      http.StatusInternalServerError,
-				emptyBody: true,
-			},
-		},
-		{
-			name: "failed post new url: service error, url already exists",
-			dependencies: dependencies{
-				service: shortener.NewMockService(repository.ErrURLIsAlreadyExists, nil),
-			},
-			parameters: parameters{
-				body:   strings.NewReader("https://github.com"),
-				userID: uuid.NewString(),
-			},
-			want: want{
-				code:      http.StatusConflict,
-				emptyBody: true,
-			},
-		},
-		{
-			name: "failed post new url: empty user id",
-			dependencies: dependencies{
-				service: shortener.NewMockService(repository.ErrURLIsAlreadyExists, nil),
-			},
-			parameters: parameters{
-				body: strings.NewReader("https://github.com"),
-			},
-			want: want{
-				code:      http.StatusBadRequest,
-				emptyBody: true,
+				code: http.StatusInternalServerError,
 			},
 		},
 	}
@@ -132,23 +141,17 @@ func TestPostNewURLHandler(t *testing.T) {
 				stdout.NewLoggerDummy(),
 				mock.NewCheckerMock(nil),
 			)
-			r := httptest.NewRequest(http.MethodPost, "/", tt.parameters.body)
-			w := httptest.NewRecorder()
+
+			r := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", tt.parameters.body)
 			ctx := context.WithValue(r.Context(), middleware.CtxUserIDKey, tt.parameters.userID)
 
-			h.PostNewURL(w, r.WithContext(ctx))
+			w := httptest.NewRecorder()
+			h.PostBatch(w, r.WithContext(ctx))
 
 			res := w.Result()
 			defer res.Body.Close()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
-
-			resBody, err := io.ReadAll(res.Body)
-			require.NoError(t, err)
-
-			if !tt.want.emptyBody {
-				assert.NotEmpty(t, resBody)
-			}
 		})
 	}
 }
