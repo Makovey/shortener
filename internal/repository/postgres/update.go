@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// MarkURLAsDeleted помечает урл как удаленный, при этом из базы данных он не удаляется
 func (r *Repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) error {
 	fn := "postgres.MarkURLAsDeleted"
 

@@ -1,3 +1,4 @@
+// Package app, ответственный за запуск веб-сервера, его выключение и роутинг хендлеров.
 package app
 
 import (
@@ -16,13 +17,15 @@ import (
 	"github.com/Makovey/shortener/internal/transport"
 )
 
+// App содержит в себе зависимости, необходимоые для запуска веб-сервера и его корректной работы.
 type App struct {
-	log     logger.Logger
-	cfg     config.Config
-	handler transport.HTTPHandler
-	wg      sync.WaitGroup
+	log     logger.Logger         // для логирования дополнительной информации
+	cfg     config.Config         // конфиг, в котором лежит адрес, на котором будет запущен сервер
+	handler transport.HTTPHandler // хэндлеры HTTP-запросов
+	wg      sync.WaitGroup        // для синхронизации горутин
 }
 
+// NewApp конструктор App
 func NewApp(
 	log logger.Logger,
 	cfg config.Config,
@@ -36,6 +39,7 @@ func NewApp(
 	}
 }
 
+// Run запуск всех процессов, которыми владеет App.
 func (a *App) Run() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGTERM)
 	defer stop()
@@ -45,6 +49,7 @@ func (a *App) Run() {
 	a.wg.Wait()
 }
 
+// runHTTPServer запускает HTTP сервер.
 func (a *App) runHTTPServer(ctx context.Context) {
 	a.wg.Add(1)
 	defer a.wg.Done()

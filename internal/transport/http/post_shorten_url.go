@@ -11,6 +11,8 @@ import (
 	"github.com/Makovey/shortener/internal/transport/model"
 )
 
+// PostShortenURL хендлер /api/shorten
+// Принимает урл, возвращает короткрй в формате JSON
 func (h handler) PostShortenURL(w http.ResponseWriter, r *http.Request) {
 	fn := "http.PostShortenURL"
 

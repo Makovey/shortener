@@ -9,6 +9,8 @@ import (
 	"github.com/Makovey/shortener/internal/repository"
 )
 
+// PostNewURL хендлер /
+// Принимает урл, возвращает короткрй в формате text/plain
 func (h handler) PostNewURL(w http.ResponseWriter, r *http.Request) {
 	fn := "http.PostNewURL"
 

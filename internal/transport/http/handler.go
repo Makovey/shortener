@@ -15,6 +15,7 @@ const (
 	reloginAndTryAgain = "please, relogin again, to get access to this resource"
 )
 
+// Service интерфейс он же useCase, слой отвечающий за бизнес-логику приложения
 type Service interface {
 	CreateShortURL(ctx context.Context, url, userID string) (string, error)
 	GetFullURL(ctx context.Context, shortURL, userID string) (model.UserFullURL, error)
@@ -29,6 +30,7 @@ type handler struct {
 	logger  logger.Logger
 }
 
+// NewHTTPHandler конструктор HTTPHandler
 func NewHTTPHandler(
 	service Service,
 	logger logger.Logger,

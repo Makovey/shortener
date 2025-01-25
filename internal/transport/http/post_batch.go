@@ -9,6 +9,8 @@ import (
 	"github.com/Makovey/shortener/internal/transport/model"
 )
 
+// PostBatch хендлер /api/shorten/batch
+// Принимает список полных урлов, возвращает список коротких урлов
 func (h handler) PostBatch(w http.ResponseWriter, r *http.Request) {
 	fn := "http.PostBatch"
 

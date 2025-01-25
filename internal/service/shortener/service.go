@@ -15,6 +15,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/model"
 )
 
+// Repository основной интерфейс для репозитория, отвечает за хранение данных
 type Repository interface {
 	SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error
 	GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error)
@@ -23,6 +24,7 @@ type Repository interface {
 	MarkURLAsDeleted(ctx context.Context, userID string, url string) error
 }
 
+// Service он же useCase, слой отвечающий за бизнес-логику приложения
 type Service struct {
 	repo   Repository
 	pinger driver.Pinger
@@ -30,6 +32,7 @@ type Service struct {
 	log    logger.Logger
 }
 
+// NewShortenerService конструктор сервиса
 func NewShortenerService(
 	shortenerRepo Repository,
 	cfg config.Config,
@@ -38,10 +41,13 @@ func NewShortenerService(
 	return &Service{repo: shortenerRepo, cfg: cfg, log: log}
 }
 
+// NewChecker конструктор чекера
 func NewChecker(pingerRepo driver.Pinger) *Service {
 	return &Service{pinger: pingerRepo}
 }
 
+// CreateShortURL метод по созданию короткого урла
+// Возвращает полный адрес с коротким урлом
 func (s *Service) CreateShortURL(ctx context.Context, url, userID string) (string, error) {
 	fn := "shortener.CreateShortURL"
 
@@ -55,6 +61,7 @@ func (s *Service) CreateShortURL(ctx context.Context, url, userID string) (strin
 	return fullShortURL, nil
 }
 
+// GetFullURL метод по получению урла, на вход принимает короткую версию урла
 func (s *Service) GetFullURL(ctx context.Context, shortURL, userID string) (model.UserFullURL, error) {
 	fn := "shortener.GetFullURL"
 
@@ -66,6 +73,8 @@ func (s *Service) GetFullURL(ctx context.Context, shortURL, userID string) (mode
 	return model.UserFullURL{OriginalURL: userURL.OriginalURL, IsDeleted: userURL.IsDeleted}, nil
 }
 
+// ShortBatch метод по созданию списка коротких урлов
+// Принимает на вход список полных урлов
 func (s *Service) ShortBatch(
 	ctx context.Context,
 	batch []model.ShortenBatchRequest,
@@ -100,6 +109,7 @@ func (s *Service) ShortBatch(
 	return res, nil
 }
 
+// GetAllURLs метод по получению всех урлов юзера по UserID
 func (s *Service) GetAllURLs(ctx context.Context, userID string) ([]comModel.ShortenBatch, error) {
 	fn := "shortener.GetAllURLs"
 
@@ -115,6 +125,8 @@ func (s *Service) GetAllURLs(ctx context.Context, userID string) ([]comModel.Sho
 	return models, nil
 }
 
+// DeleteUsersURLs помечает урлы юзера как удаленные
+// Принимает на вход список коротких урлов
 func (s *Service) DeleteUsersURLs(ctx context.Context, userID string, shortURLs []string) []error {
 	fn := "shortener.DeleteUsersURLs"
 
@@ -151,6 +163,7 @@ func (s *Service) DeleteUsersURLs(ctx context.Context, userID string, shortURLs 
 	return errors
 }
 
+// CheckPing метод по пингу репозитрия
 func (s *Service) CheckPing(ctx context.Context) error {
 	return s.pinger.Ping(ctx)
 }

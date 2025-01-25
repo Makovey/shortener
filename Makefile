@@ -21,7 +21,7 @@ mig-d:
 
 remote_all_tests:
 	go build -o cmd/shortener/${BINARY_NAME} cmd/shortener/*.go;
-	@for i in $(shell seq 1 16); do \
+	@for i in $(shell seq 1 18); do \
 		./shortenertest -test.v -test.run=^TestIteration$$i$$ \
 		-source-path=. \
 		-server-port=8080 \
@@ -32,7 +32,7 @@ remote_all_tests:
 
 remote_current_iter:
 	go build -o cmd/shortener/${BINARY_NAME} cmd/shortener/*.go
-	./shortenertest -test.v -test.run=^TestIteration15$$ \
+	./shortenertest -test.v -test.run=^TestIteration18$$ \
 	-source-path=. \
 	-binary-path=cmd/shortener/${BINARY_NAME} \
 	-database-dsn=postgres://admin:admin@localhost:5432/postgres

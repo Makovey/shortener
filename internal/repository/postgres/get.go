@@ -11,6 +11,7 @@ import (
 	"github.com/Makovey/shortener/internal/service/model"
 )
 
+// GetFullURL возвращает полный урл по короткому урлу, если он есть в базе данных
 func (r *Repo) GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error) {
 	fn := "postgres.GetFullURL"
 
@@ -29,6 +30,7 @@ func (r *Repo) GetFullURL(ctx context.Context, shortURL, userID string) (*repoMo
 	return &url, nil
 }
 
+// GetUserURLs возвращает все урлы юзера, которые есть в базе данных
 func (r *Repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenBatch, error) {
 	fn := "postgres.GetUserURLs"
 

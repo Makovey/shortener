@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+// DeleteURLS хендлер /api/user/urls
+// ждет на вход список коротких урлов для их дальнейшего удаления
 func (h handler) DeleteURLS(w http.ResponseWriter, r *http.Request) {
 	fn := "http.DeleteURLS"
 

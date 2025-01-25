@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	"github.com/Makovey/shortener/internal/logger"
-	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
-type repo struct {
+// Repo файловый репозитрий
+type Repo struct {
 	file   *os.File
 	path   string
 	writer *bufio.Writer
@@ -18,7 +18,8 @@ type repo struct {
 	mu     sync.RWMutex
 }
 
-func NewFileStorage(filePath string, log logger.Logger) (shortener.Repository, error) {
+// NewFileStorage по filePath открывает файл или создает его в случай отсутствия
+func NewFileStorage(filePath string, log logger.Logger) (*Repo, error) {
 	fn := "disc.NewFileStorage"
 
 	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -26,7 +27,7 @@ func NewFileStorage(filePath string, log logger.Logger) (shortener.Repository, e
 		return nil, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	return &repo{
+	return &Repo{
 		file:   f,
 		path:   filePath,
 		writer: bufio.NewWriter(f),
@@ -35,6 +36,7 @@ func NewFileStorage(filePath string, log logger.Logger) (shortener.Repository, e
 	}, nil
 }
 
-func (r *repo) Close() error {
+// Close закрывает файл
+func (r *Repo) Close() error {
 	return r.file.Close()
 }

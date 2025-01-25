@@ -20,11 +20,13 @@ const (
 	migrationPath         = "internal/db/migrations"
 )
 
+// Repo репозиторий базы данных
 type Repo struct {
 	log logger.Logger
 	db  *sql.DB
 }
 
+// NewPostgresRepository конструктор репозитория базы данных
 func NewPostgresRepository(cfg config.Config, log logger.Logger) (*Repo, error) {
 	fn := "postgresql.NewPostgresRepo"
 
@@ -48,7 +50,7 @@ func NewPostgresRepository(cfg config.Config, log logger.Logger) (*Repo, error) 
 	}, nil
 }
 
-// NewPingerRepo нужен, на случай если если репозиторий - не Postgres, для поддержки ручки ping
+// NewPingerRepo на случай если если репозиторий - не Postgres, для поддержки ручки ping
 // Если репозиторий Postgres, то метод вызван не будет
 func NewPingerRepo(cfg config.Config) (driver.Pinger, error) {
 	fn := "postgres.NewPingerRepo"
@@ -63,6 +65,7 @@ func NewPingerRepo(cfg config.Config) (driver.Pinger, error) {
 	}, nil
 }
 
+// Ping хелсчек для базы данных
 func (r *Repo) Ping(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -74,6 +77,7 @@ func (r *Repo) Ping(ctx context.Context) error {
 	return nil
 }
 
+// Close закрывает базу данных
 func (r *Repo) Close() error {
 	return r.db.Close()
 }

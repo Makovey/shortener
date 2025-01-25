@@ -11,7 +11,8 @@ import (
 	"github.com/Makovey/shortener/internal/repository/model"
 )
 
-func (r *repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) error {
+// MarkURLAsDeleted помечает урл как удаленный, при этом из файла он не удаляется
+func (r *Repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) error {
 	fn := "disc.MarkURLAsDeleted"
 
 	r.mu.Lock()
@@ -32,7 +33,7 @@ func (r *repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) 
 		return fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	err = r.RewriteURLS(urls, userID)
+	err = r.rewriteURLS(urls, userID)
 	if err != nil {
 		return fmt.Errorf("[%s]: %w", fn, err)
 	}
@@ -40,7 +41,7 @@ func (r *repo) MarkURLAsDeleted(ctx context.Context, userID string, url string) 
 	return nil
 }
 
-func (r *repo) RewriteURLS(models []model.ShortenerURL, userID string) error {
+func (r *Repo) rewriteURLS(models []model.ShortenerURL, userID string) error {
 	fn := "disc.RewriteURLS"
 
 	for _, m := range models {

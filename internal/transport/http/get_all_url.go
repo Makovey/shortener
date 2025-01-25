@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// GetAllURLS хендлер /api/user/urls
+// Возвращает список урлов юзера
 func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
 	fn := "http.GetAllURLS"
 

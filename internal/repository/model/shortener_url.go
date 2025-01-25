@@ -1,5 +1,6 @@
 package model
 
+// ShortenerURL полная информация по урлу
 type ShortenerURL struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`

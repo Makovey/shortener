@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// GetURL хендлер /{id}
+// Возвращает полный урл в Location Header
 func (h handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	fn := "http.GetURL"
 

@@ -8,14 +8,17 @@ import (
 	"github.com/Makovey/shortener/internal/logger"
 )
 
+// Logger структура для содержания методов middleware
 type Logger struct {
 	log logger.Logger
 }
 
+// NewLogger конструктор Logger
 func NewLogger(log logger.Logger) Logger {
 	return Logger{log: log}
 }
 
+// Logger метод который выступает middleware, логирует статусы http ответов
 func (l Logger) Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tm := time.Now()
@@ -41,6 +44,8 @@ type wrappedResponseWriter struct {
 	bodySize    int
 }
 
+// WriteHeader для соответствия интерфейсу
+// Дополнительный флаг, для избежания коллизиий
 func (b *wrappedResponseWriter) WriteHeader(code int) {
 	if !b.wroteHeader {
 		b.code = code
@@ -49,6 +54,7 @@ func (b *wrappedResponseWriter) WriteHeader(code int) {
 	}
 }
 
+// Write дополнительно записывает размер ответа
 func (b *wrappedResponseWriter) Write(buf []byte) (n int, err error) {
 	b.writeHeaderIfNeeded()
 	n, err = b.ResponseWriter.Write(buf)
