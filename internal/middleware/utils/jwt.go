@@ -16,6 +16,7 @@ const (
 	secretKey = "shortener_secret_key"
 )
 
+// Ошибки, которые может вернуть валидатор JWT токенов
 var (
 	ErrSigningMethod = errors.New("unexpected signing method")
 	ErrParseToken    = errors.New("failed to parse token")
@@ -23,19 +24,23 @@ var (
 	ErrTokenExpired  = errors.New("token is expired")
 )
 
+// JWTUtils хелперы по работе с JWT
 type JWTUtils struct {
 	logger logger.Logger
 }
 
+// NewJWTUtils конструктор JWTUtils
 func NewJWTUtils(logger logger.Logger) JWTUtils {
 	return JWTUtils{logger: logger}
 }
 
+// Claims полезная информация в токене
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID string
 }
 
+// BuildNewJWT генерирует новый JWT токен, которы действует tokenExp
 func (j JWTUtils) BuildNewJWT(userID string) (string, error) {
 	f := "jwt.buildNewJWT:"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
@@ -54,6 +59,7 @@ func (j JWTUtils) BuildNewJWT(userID string) (string, error) {
 	return tokenString, nil
 }
 
+// ParseUserID принимает JWT токен, и возвращает UserID, если токен валидный и действующий
 func (j JWTUtils) ParseUserID(tokenString string) (string, error) {
 	f := "jwt.parseUserID:"
 	var claims Claims

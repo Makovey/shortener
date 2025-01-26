@@ -1,67 +1,83 @@
+// Package app, ответственный за запуск веб-сервера, его выключение и роутинг хендлеров.
 package app
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-
-	"github.com/Makovey/shortener/internal/middleware"
-	"github.com/Makovey/shortener/internal/middleware/utils"
+	"github.com/Makovey/shortener/internal/config"
+	"github.com/Makovey/shortener/internal/logger"
+	"github.com/Makovey/shortener/internal/transport"
 )
 
+// App содержит в себе зависимости, необходимоые для запуска веб-сервера и его корректной работы.
 type App struct {
-	dependencyProvider *dependencyProvider
+	log     logger.Logger         // для логирования дополнительной информации
+	cfg     config.Config         // конфиг, в котором лежит адрес, на котором будет запущен сервер
+	handler transport.HTTPHandler // хэндлеры HTTP-запросов
+	wg      sync.WaitGroup        // для синхронизации горутин
 }
 
-func NewApp() *App {
-	return &App{dependencyProvider: newDependencyProvider()}
+// NewApp конструктор App
+func NewApp(
+	log logger.Logger,
+	cfg config.Config,
+	handler transport.HTTPHandler,
+) *App {
+	return &App{
+		log:     log,
+		cfg:     cfg,
+		handler: handler,
+		wg:      sync.WaitGroup{},
+	}
 }
 
+// Run запуск всех процессов, которыми владеет App.
 func (a *App) Run() {
-	a.runHTTPServer()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGTERM)
+	defer stop()
+
+	a.runHTTPServer(ctx)
+
+	a.wg.Wait()
 }
 
-func (a *App) initRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Use(middleware.NewLogger(a.dependencyProvider.Logger()).Logger)
+// runHTTPServer запускает HTTP сервер.
+func (a *App) runHTTPServer(ctx context.Context) {
+	a.wg.Add(1)
+	defer a.wg.Done()
 
-	jwtMiddleware := middleware.NewAuthHandler(a.dependencyProvider.Logger(), utils.NewJWTUtils(a.dependencyProvider.Logger()))
-	r.Use(jwtMiddleware.AuthHandler)
-	r.Use(middleware.NewCompressor().Compress)
-	r.Use(chiMiddleware.Recoverer)
+	fn := "app.runHTTPServer"
 
-	r.Post("/", a.dependencyProvider.HTTPHandler().PostNewURL)
-	r.Get("/{id}", a.dependencyProvider.HTTPHandler().GetURL)
-	r.Get("/ping", a.dependencyProvider.HTTPHandler().GetPing)
-
-	r.Route("/api", func(r chi.Router) {
-		r.Post("/shorten", a.dependencyProvider.HTTPHandler().PostShortenURL)
-		r.Post("/shorten/batch", a.dependencyProvider.HTTPHandler().PostBatch)
-		r.Get("/user/urls", a.dependencyProvider.HTTPHandler().GetAllURLS)
-		r.Delete("/user/urls", a.dependencyProvider.HTTPHandler().DeleteURLS)
-	})
-
-	return r
-}
-
-func (a *App) runHTTPServer() {
-	cfg := a.dependencyProvider.Config()
-	a.dependencyProvider.Logger().Info(fmt.Sprintf("starting http server on -> %s", cfg.Addr()))
+	a.log.Info(fmt.Sprintf("[%s]: starting http server on: %s", fn, a.cfg.Addr()))
 
 	srv := &http.Server{
-		Addr:    cfg.Addr(),
+		Addr:    a.cfg.Addr(),
 		Handler: a.initRouter(),
 		TLSConfig: &tls.Config{
 			MinVersion: tls.VersionTLS13,
 		},
 	}
 
-	if err := srv.ListenAndServe(); err != nil {
-		a.dependencyProvider.Logger().Info(fmt.Sprintf("http server stopped: %s", err))
-	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			a.log.Info(fmt.Sprintf("[%s] http server stopped: %s", fn, err))
+		}
+	}()
 
-	defer a.dependencyProvider.Closer.CloseAll()
+	<-ctx.Done()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		a.log.Info(fmt.Sprintf("[%s]: http server shutdown timeout: %s", err, fn))
+	}
 }

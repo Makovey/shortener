@@ -1,22 +1,25 @@
+// Package config отвечат за конфигурацию приложения посредством env и flag переменных.
 package config
 
-import "strings"
+import (
+	"strings"
 
-// Config methods:
-// Addr - returned address of launching server
-// BaseReturnedURL - returned base url in response when url is shorted
-// FileStoragePath - returned path for disc with urls
-// DatabaseDSN - data source string for sql.DB
+	"github.com/Makovey/shortener/internal/logger"
+)
+
+// Config аггрегирует конфигурацию через флаги и переменные окружения.
+// Приоритет: Env -> Flag -> Default
 type Config interface {
-	Addr() string
-	BaseReturnedURL() string
-	FileStoragePath() string
-	DatabaseDSN() string
+	Addr() string            // returned address of launching server
+	BaseReturnedURL() string // returned base url in response when url is shorted
+	FileStoragePath() string // returned path for disc with urls
+	DatabaseDSN() string     // data source string for sql.DB
 }
 
+// Настройки по-умолчанию
 const (
-	defaultAddr    = "localhost:8080"
-	defaultBaseURL = "http://localhost:8080"
+	defaultAddr    = "localhost:8080"        // запуск сервера
+	defaultBaseURL = "http://localhost:8080" // возвращаемый base url для ответа некоторых ручек
 )
 
 type config struct {
@@ -26,78 +29,64 @@ type config struct {
 	databaseDSN     string
 }
 
-func NewConfig() Config {
+// NewConfig конструктор Config
+func NewConfig(
+	log logger.Logger, // необходимо для логирования конфигурации на старте приложения
+) Config {
 	envCfg := newEnvConfig()
 	flags := newFlagsValue()
 
-	return &config{
-		addr:            addrValue(envCfg, flags),
-		baseReturnedURL: baseURLValue(envCfg, flags),
-		fileStoragePath: filePathValue(envCfg, flags),
-		databaseDSN:     databaseDSNValue(envCfg, flags),
+	cfg := &config{
+		addr:            resolveValue(envCfg.Addr, flags.addr, defaultAddr),
+		baseReturnedURL: resolveValue(envCfg.BaseReturnedURL, flags.baseReturnedURL, defaultBaseURL),
+		fileStoragePath: resolveValue(envCfg.FileStoragePath, flags.fileStoragePath, ""),
+		databaseDSN:     resolveDatabaseURI(envCfg.DatabaseDSN, flags.databaseDSN),
 	}
+
+	log.Debug("Addr: " + cfg.addr)
+	log.Debug("BaseReturnedURL: " + cfg.addr)
+	log.Debug("FileStoragePath: " + cfg.addr)
+	log.Debug("DatabaseDSN: " + cfg.addr)
+
+	return cfg
 }
 
+// Addr - сконфигурированный адрес для запуска сервера
 func (cfg config) Addr() string {
 	return cfg.addr
 }
 
+// BaseReturnedURL - сконфигурированный адрес в ответе для некоторых ручек
 func (cfg config) BaseReturnedURL() string {
 	return cfg.baseReturnedURL
 }
 
+// FileStoragePath - адрес файла на диске, как временное хранилище
 func (cfg config) FileStoragePath() string {
 	return cfg.fileStoragePath
 }
 
+// DatabaseDSN - адрес подключения к базе данных
 func (cfg config) DatabaseDSN() string {
 	return cfg.databaseDSN
 }
 
-func addrValue(envCfg envConfig, flags flagsValue) string {
-	addr := defaultAddr
-	if envAddr := envCfg.Addr; envAddr != "" {
-		addr = envAddr
-	} else if flagAddr := flags.addr; flagAddr != "" {
-		addr = flags.addr
+func resolveValue(envValue, flagValue, defaultValue string) string {
+	if envValue != "" {
+		return envValue
 	}
 
-	return addr
+	if flagValue != "" {
+		return flagValue
+	}
+
+	return defaultValue
 }
 
-func baseURLValue(envCfg envConfig, flags flagsValue) string {
-	baseReturnedURL := defaultBaseURL
-	if envBase := envCfg.BaseReturnedURL; envBase != "" {
-		baseReturnedURL = envBase
-	} else if flagBaseURL := flags.baseReturnedURL; flagBaseURL != "" {
-		baseReturnedURL = flags.baseReturnedURL
+func resolveDatabaseURI(envValue, flagValue string) string {
+	dsn := resolveValue(envValue, flagValue, "")
+	if dsn != "" && !strings.Contains(dsn, "?sslmode=disable") {
+		dsn += "?sslmode=disable"
 	}
-
-	return baseReturnedURL
-}
-
-func filePathValue(envCfg envConfig, flags flagsValue) string {
-	var urlPath string
-	if envStoragePath := envCfg.FileStoragePath; envStoragePath != "" {
-		urlPath = envStoragePath
-	} else if flagPath := flags.fileStoragePath; flagPath != "" {
-		urlPath = flags.fileStoragePath
-	}
-
-	return urlPath
-}
-
-func databaseDSNValue(envCfg envConfig, flags flagsValue) string {
-	var databaseDSN string
-	if envDSN := envCfg.DatabaseDSN; envDSN != "" {
-		databaseDSN = envDSN
-	} else if flagDSN := flags.databaseDSN; flagDSN != "" {
-		databaseDSN = flagDSN
-	}
-
-	if databaseDSN != "" && !strings.Contains(databaseDSN, "?sslmode=disable") {
-		databaseDSN = databaseDSN + "?sslmode=disable"
-	}
-
-	return databaseDSN
+	return dsn
 }

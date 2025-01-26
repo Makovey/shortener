@@ -13,22 +13,31 @@ import (
 	"github.com/Makovey/shortener/internal/middleware/utils"
 )
 
+// Key отдельный тип для ключа используемый контекстом, во избежание коллизий
 type Key string
 
+// Ключи, по которым лежат авторизационные данные
 const (
 	jwtCookieName     = "jwt"
 	CtxUserIDKey  Key = "UserID"
 )
 
+// AuthHandler отвечает за авторизацию в приложении
 type AuthHandler struct {
 	jwtUtils utils.JWTUtils
 	logger   logger.Logger
 }
 
-func NewAuthHandler(log logger.Logger, jwtUtils utils.JWTUtils) AuthHandler {
+// NewAuthHandler конструктор для AuthHandler
+func NewAuthHandler(
+	log logger.Logger,
+	jwtUtils utils.JWTUtils,
+) AuthHandler {
 	return AuthHandler{logger: log, jwtUtils: jwtUtils}
 }
 
+// AuthHandler выступает middleware авторизации
+// Проверяет в куках наличие JWT токена и проверяет его на валидность
 func (j AuthHandler) AuthHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f := "jwt.AuthHandler:"

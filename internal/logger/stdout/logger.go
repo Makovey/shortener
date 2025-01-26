@@ -8,26 +8,33 @@ import (
 	def "github.com/Makovey/shortener/internal/logger"
 )
 
+// EnvString
+type EnvString string
+
+// Варианты окружений для настройки логгера
 const (
-	envDev  = "dev"
-	envProd = "prod"
+	EnvDev   EnvString = "dev"
+	EnvProd  EnvString = "prod"
+	EnvLocal EnvString = "local"
 )
 
 type loggerStdout struct {
 	log *logrus.Logger
 }
 
-func NewLoggerStdout(env string) def.Logger {
+// NewLoggerStdout конструкто для логгера.
+// env: строка, подразумевающая текущее окружения, точечной настройки
+func NewLoggerStdout(env EnvString) def.Logger {
 	var log *logrus.Logger
 
 	switch env {
-	case envDev:
+	case EnvDev:
 		log = &logrus.Logger{
 			Out:       os.Stdout,
 			Formatter: new(logrus.JSONFormatter),
 			Level:     logrus.DebugLevel,
 		}
-	case envProd:
+	case EnvProd:
 		log = &logrus.Logger{
 			Out:       os.Stdout,
 			Formatter: new(logrus.JSONFormatter),
@@ -47,21 +54,26 @@ func NewLoggerStdout(env string) def.Logger {
 	return &loggerStdout{log: log}
 }
 
+// Info - информационный характер
 func (l loggerStdout) Info(msg string, args ...string) {
 	fields := makeFieldsFromArgs(args...)
 	l.log.WithFields(fields).Infoln(msg)
 }
 
+// Error - ошибки
 func (l loggerStdout) Error(msg string, args ...string) {
 	fields := makeFieldsFromArgs(args...)
 	l.log.WithFields(fields).Errorln(msg)
 }
 
+// Debug - дебаг.
+// Note: не логируется для продового окружения
 func (l loggerStdout) Debug(msg string, args ...string) {
 	fields := makeFieldsFromArgs(args...)
 	l.log.WithFields(fields).Debugln(msg)
 }
 
+// Warning - ворнинги
 func (l loggerStdout) Warning(msg string, args ...string) {
 	fields := makeFieldsFromArgs(args...)
 	l.log.WithFields(fields).Warningln(msg)

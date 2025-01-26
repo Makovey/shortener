@@ -1,7 +1,8 @@
-package api
+package transport
 
 import "net/http"
 
+// HTTPHandler общий интерфейс хендлеров
 type HTTPHandler interface {
 	PostNewURL(w http.ResponseWriter, r *http.Request)
 	GetURL(w http.ResponseWriter, r *http.Request)

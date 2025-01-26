@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// Generator принимает массив данных и записывает их в канал
 func Generator[T any](ctx context.Context, input []T) chan T {
 	inputCh := make(chan T)
 	go func() {
@@ -22,6 +23,9 @@ func Generator[T any](ctx context.Context, input []T) chan T {
 	return inputCh
 }
 
+// FanOut распараллеливает работу
+// Принимает количество воркеров и замыкание/работу, которую необходимо выполнить
+// Возвращает слайс каналов с результатами работ
 func FanOut[T any](ctx context.Context, numWorkers int, work func(ctx context.Context) chan T) []chan T {
 	channels := make([]chan T, numWorkers)
 
@@ -32,6 +36,9 @@ func FanOut[T any](ctx context.Context, numWorkers int, work func(ctx context.Co
 	return channels
 }
 
+// FanIn собирает резульаты работы в один канал из списка каналов, работает в паре FanOut
+// Принимает на вход список каналов, в котором результаты работы
+// Отдает один канал с результатом
 func FanIn[T any](ctx context.Context, bufSize int, resultChs ...chan T) chan T {
 	finalCh := make(chan T, bufSize)
 

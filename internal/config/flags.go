@@ -26,27 +26,37 @@ func newFlagsValue() flagsValue {
 }
 
 func (v *flagsValue) parseFlagsIfNeeded() {
-	if flag.Lookup(flagAddr) == nil {
-		flag.StringVar(&v.addr, flagAddr, "", "the address to listen on for HTTP requests")
-	} else {
-		v.addr = flag.Lookup(flagAddr).Value.(flag.Getter).Get().(string)
-	}
+	registerFlag(
+		flagAddr,
+		"the address to listen on for HTTP requests, in format [host:port]",
+		&v.addr,
+	)
 
-	if flag.Lookup(flagBaseURL) == nil {
-		flag.StringVar(&v.baseReturnedURL, flagBaseURL, "", "base url returned in response when url is shorted")
-	} else {
-		v.baseReturnedURL = flag.Lookup(flagBaseURL).Value.(flag.Getter).Get().(string)
-	}
+	registerFlag(
+		flagBaseURL,
+		"base full url returned in response when url is shorted, in format [protocol://host:port]",
+		&v.baseReturnedURL,
+	)
 
-	if flag.Lookup(flagFileStoragePath) == nil {
-		flag.StringVar(&v.fileStoragePath, flagFileStoragePath, "", "disc path for url storage")
-	} else {
-		v.fileStoragePath = flag.Lookup(flagFileStoragePath).Value.(flag.Getter).Get().(string)
-	}
+	registerFlag(
+		flagFileStoragePath,
+		"disc path for url storage, in format [./filename.format]",
+		&v.fileStoragePath,
+	)
 
-	if flag.Lookup(flagDatabaseDSN) == nil {
-		flag.StringVar(&v.databaseDSN, flagDatabaseDSN, "", "database DSN in format -> postgres://username:password@host:port/databaseName")
-	}
+	registerFlag(
+		flagDatabaseDSN,
+		"database DSN, in format [postgres://username:password@host:port/dbName]",
+		&v.databaseDSN,
+	)
 
 	flag.Parse()
+}
+
+func registerFlag(name, usage string, target *string) {
+	if flag.Lookup(name) == nil {
+		flag.StringVar(target, name, "", usage)
+	} else {
+		*target = flag.Lookup(name).Value.(flag.Getter).Get().(string)
+	}
 }
