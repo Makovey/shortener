@@ -44,9 +44,9 @@ func NewConfig(
 	}
 
 	log.Debug("Addr: " + cfg.addr)
-	log.Debug("BaseReturnedURL: " + cfg.addr)
-	log.Debug("FileStoragePath: " + cfg.addr)
-	log.Debug("DatabaseDSN: " + cfg.addr)
+	log.Debug("BaseReturnedURL: " + cfg.baseReturnedURL)
+	log.Debug("FileStoragePath: " + cfg.fileStoragePath)
+	log.Debug("DatabaseDSN: " + cfg.databaseDSN)
 
 	return cfg
 }
