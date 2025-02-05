@@ -54,11 +54,6 @@ func (j AuthHandler) AuthHandler(next http.Handler) http.Handler {
 			}
 		}
 
-		if isCookieAbsent && r.URL.Path == "/api/user/urls" {
-			responseWithError(w, http.StatusUnauthorized, "unauthorized")
-			return
-		}
-
 		if !isCookieAbsent {
 			userID, err = j.jwtUtils.ParseUserID(jwtCookie.Value)
 			if err != nil && errors.Is(err, utils.ErrParseToken) {

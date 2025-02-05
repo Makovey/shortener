@@ -17,6 +17,12 @@ import (
 	transport "github.com/Makovey/shortener/internal/transport/http"
 )
 
+var (
+	buildVersion = "N/A" // версия приложения
+	buildDate    = "N/A" // дата сборки
+	buildCommit  = "N/A" // коммит сборки
+)
+
 func main() {
 	log := stdout.NewLoggerStdout(stdout.EnvLocal)
 	cfg := config.NewConfig(log)
@@ -36,6 +42,10 @@ func main() {
 		cfg,
 		handler,
 	)
+
+	log.Debug(fmt.Sprintf("Build version: %s", buildVersion))
+	log.Debug(fmt.Sprintf("Build date: %s", buildDate))
+	log.Debug(fmt.Sprintf("Build commit: %s", buildCommit))
 
 	appl.Run()
 
