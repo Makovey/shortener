@@ -16,6 +16,8 @@ import (
 )
 
 // Repository основной интерфейс для репозитория, отвечает за хранение данных
+//
+//go:generate mockgen -source=service.go -destination=../../repository/mocks/repository_mock.go -package=mocks
 type Repository interface {
 	SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error
 	GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error)
@@ -51,7 +53,7 @@ func NewChecker(pingerRepo driver.Pinger) *Service {
 func (s *Service) CreateShortURL(ctx context.Context, url, userID string) (string, error) {
 	fn := "shortener.CreateShortURL"
 
-	shortURL := s.generateShortURL(url)
+	shortURL := generateShortURL(url)
 	err := s.repo.SaveUserURL(ctx, shortURL, url, userID)
 	fullShortURL := fmt.Sprintf("%s/%s", s.cfg.BaseReturnedURL(), shortURL)
 	if err != nil {
@@ -80,33 +82,14 @@ func (s *Service) ShortBatch(
 	batch []model.ShortenBatchRequest,
 	userID string,
 ) ([]model.ShortenBatchResponse, error) {
-	var b []comModel.ShortenBatch
-	for _, req := range batch {
-		tmp := comModel.ShortenBatch{
-			CorrelationID: req.CorrelationID,
-			ShortURL:      s.generateShortURL(req.OriginalURL),
-			OriginalURL:   req.OriginalURL,
-		}
-
-		b = append(b, tmp)
-	}
+	b := fromTransportToRepoShortenBatch(batch)
 
 	err := s.repo.SaveUserURLs(ctx, b, userID)
 	if err != nil {
 		return nil, fmt.Errorf("[%s]: %w", userID, err)
 	}
 
-	var res []model.ShortenBatchResponse
-	for _, req := range b {
-		tmp := model.ShortenBatchResponse{
-			CorrelationID: req.CorrelationID,
-			ShortURL:      fmt.Sprintf("%s/%s", s.cfg.BaseReturnedURL(), req.ShortURL),
-		}
-
-		res = append(res, tmp)
-	}
-
-	return res, nil
+	return fromRepoToShortenBatchResponse(b, s.cfg.BaseReturnedURL()), nil
 }
 
 // GetAllURLs метод по получению всех урлов юзера по UserID
@@ -168,7 +151,7 @@ func (s *Service) CheckPing(ctx context.Context) error {
 	return s.pinger.Ping(ctx)
 }
 
-func (s *Service) generateShortURL(url string) string {
+func generateShortURL(url string) string {
 	h := md5.New()
 	h.Write([]byte(url))
 

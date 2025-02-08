@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"io"
-	"os"
+	syslog "log"
 
 	"github.com/Makovey/shortener/internal/app"
 	"github.com/Makovey/shortener/internal/closer"
@@ -16,6 +16,12 @@ import (
 	"github.com/Makovey/shortener/internal/repository/postgres"
 	"github.com/Makovey/shortener/internal/service/shortener"
 	transport "github.com/Makovey/shortener/internal/transport/http"
+)
+
+var (
+	buildVersion = "N/A" // версия приложения
+	buildDate    = "N/A" // дата сборки
+	buildCommit  = "N/A" // коммит сборки
 )
 
 func main() {
@@ -38,6 +44,10 @@ func main() {
 		handler,
 	)
 
+	log.Debug(fmt.Sprintf("Build version: %s", buildVersion))
+	log.Debug(fmt.Sprintf("Build date: %s", buildDate))
+	log.Debug(fmt.Sprintf("Build commit: %s", buildCommit))
+
 	appl.Run()
 
 	defer closers.CloseAll()
@@ -51,17 +61,15 @@ func assembleRepo(
 	var repo shortener.Repository
 	switch {
 	case cfg.DatabaseDSN() != "":
-		postgres, err := postgres.NewPostgresRepository(cfg, log)
+		postgre, err := postgres.NewPostgresRepository(cfg, log)
 		if err != nil {
-			log.Error(fmt.Sprintf("unable to create postgres repository: %s", err))
-			os.Exit(1)
+			syslog.Fatalf("unable to create postgres repository: %s", err)
 		}
-		repo = postgres
+		repo = postgre
 	case cfg.FileStoragePath() != "":
 		file, err := disc.NewFileStorage(cfg.FileStoragePath(), log)
 		if err != nil {
-			log.Error(fmt.Sprintf("unable to create file storage repository: %s", err))
-			os.Exit(1)
+			syslog.Fatalf("unable to create file storage repository: %s", err)
 		}
 		repo = file
 	default:
@@ -88,8 +96,7 @@ func assemblePinger(
 	} else {
 		postgresPing, err := postgres.NewPingerRepo(cfg)
 		if err != nil {
-			log.Error(fmt.Sprintf("unable to create postgres pinger: %s", err))
-			os.Exit(1)
+			syslog.Fatalf("unable to create postgres pinger: %s", err)
 		}
 		pinger = postgresPing
 	}
