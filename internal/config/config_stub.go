@@ -23,6 +23,11 @@ func (c *configDummy) DatabaseDSN() string {
 	return "postgres://postgres:postgres@localhost/postgres?sslmode=disable"
 }
 
+// EnableHTTPS стаб для https
+func (c *configDummy) EnableHTTPS() bool {
+	return false
+}
+
 // Addr стаб для адреса запускаемого сервера
 func (c *configDummy) Addr() string {
 	return ":8080"

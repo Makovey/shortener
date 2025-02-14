@@ -9,6 +9,7 @@ const (
 	flagBaseURL         = "b"
 	flagFileStoragePath = "f"
 	flagDatabaseDSN     = "d"
+	flagEnableHTTPS     = "s"
 )
 
 type flagsValue struct {
@@ -16,6 +17,7 @@ type flagsValue struct {
 	baseReturnedURL string
 	fileStoragePath string
 	databaseDSN     string
+	enableHTTPS     bool
 }
 
 func newFlagsValue() flagsValue {
@@ -50,6 +52,12 @@ func (v *flagsValue) parseFlagsIfNeeded() {
 		&v.databaseDSN,
 	)
 
+	registerBoolFlag(
+		flagEnableHTTPS,
+		"enable HTTPS for server, in format [-s]",
+		&v.enableHTTPS,
+	)
+
 	flag.Parse()
 }
 
@@ -58,5 +66,13 @@ func registerFlag(name, usage string, target *string) {
 		flag.StringVar(target, name, "", usage)
 	} else {
 		*target = flag.Lookup(name).Value.(flag.Getter).Get().(string)
+	}
+}
+
+func registerBoolFlag(name, usage string, target *bool) {
+	if flag.Lookup(name) == nil {
+		flag.BoolVar(target, name, false, usage)
+	} else {
+		*target = flag.Lookup(name).Value.(flag.Getter).Get().(bool)
 	}
 }

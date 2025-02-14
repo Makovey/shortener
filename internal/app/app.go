@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/crypto/acme/autocert"
+
 	"github.com/Makovey/shortener/internal/config"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/transport"
@@ -51,24 +53,42 @@ func (a *App) Run() {
 
 // runHTTPServer запускает HTTP сервер.
 func (a *App) runHTTPServer(ctx context.Context) {
+	fn := "app.runHTTPServer"
+
 	a.wg.Add(1)
 	defer a.wg.Done()
 
-	fn := "app.runHTTPServer"
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS13,
+	}
+
+	if a.cfg.EnableHTTPS() {
+		manager := &autocert.Manager{
+			Cache:      autocert.DirCache("cache-dir"),
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("localhost"),
+		}
+
+		tlsConfig = manager.TLSConfig()
+	}
+
+	srv := &http.Server{
+		Addr:      a.cfg.Addr(),
+		Handler:   a.initRouter(),
+		TLSConfig: tlsConfig,
+	}
 
 	a.log.Info(fmt.Sprintf("[%s]: starting http server on: %s", fn, a.cfg.Addr()))
 
-	srv := &http.Server{
-		Addr:    a.cfg.Addr(),
-		Handler: a.initRouter(),
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
-		},
-	}
-
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			a.log.Info(fmt.Sprintf("[%s] http server stopped: %s", fn, err))
+		if a.cfg.EnableHTTPS() {
+			if err := srv.ListenAndServeTLS("", ""); err != nil {
+				a.log.Info(fmt.Sprintf("[%s] http server stopped: %s", fn, err))
+			}
+		} else {
+			if err := srv.ListenAndServe(); err != nil {
+				a.log.Info(fmt.Sprintf("[%s] http server stopped: %s", fn, err))
+			}
 		}
 	}()
 

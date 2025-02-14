@@ -14,6 +14,7 @@ type Config interface {
 	BaseReturnedURL() string // returned base url in response when url is shorted
 	FileStoragePath() string // returned path for disc with urls
 	DatabaseDSN() string     // data source string for sql.DB
+	EnableHTTPS() bool       // enabled https
 }
 
 // Настройки по-умолчанию
@@ -27,6 +28,7 @@ type config struct {
 	baseReturnedURL string
 	fileStoragePath string
 	databaseDSN     string
+	enableHTTPS     bool
 }
 
 // NewConfig конструктор Config
@@ -41,6 +43,7 @@ func NewConfig(
 		baseReturnedURL: resolveValue(envCfg.BaseReturnedURL, flags.baseReturnedURL, defaultBaseURL),
 		fileStoragePath: resolveValue(envCfg.FileStoragePath, flags.fileStoragePath, ""),
 		databaseDSN:     resolveDatabaseURI(envCfg.DatabaseDSN, flags.databaseDSN),
+		enableHTTPS:     resolveBoolValue(envCfg.EnableHTTPS, flags.enableHTTPS),
 	}
 
 	log.Debug("Addr: " + cfg.addr)
@@ -71,6 +74,11 @@ func (cfg config) DatabaseDSN() string {
 	return cfg.databaseDSN
 }
 
+// EnableHTTPS - поднятие сервера под HTTPS
+func (cfg config) EnableHTTPS() bool {
+	return cfg.enableHTTPS
+}
+
 func resolveValue(envValue, flagValue, defaultValue string) string {
 	if envValue != "" {
 		return envValue
@@ -89,4 +97,12 @@ func resolveDatabaseURI(envValue, flagValue string) string {
 		dsn += "?sslmode=disable"
 	}
 	return dsn
+}
+
+func resolveBoolValue(envValue, flagValue bool) bool {
+	if envValue || flagValue {
+		return true
+	}
+
+	return false
 }
