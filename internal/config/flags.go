@@ -10,6 +10,7 @@ const (
 	flagFileStoragePath = "f"
 	flagDatabaseDSN     = "d"
 	flagEnableHTTPS     = "s"
+	flagConfigFile      = "c"
 )
 
 type flagsValue struct {
@@ -18,6 +19,7 @@ type flagsValue struct {
 	fileStoragePath string
 	databaseDSN     string
 	enableHTTPS     bool
+	configFilePath  string
 }
 
 func newFlagsValue() flagsValue {
@@ -56,6 +58,12 @@ func (v *flagsValue) parseFlagsIfNeeded() {
 		flagEnableHTTPS,
 		"enable HTTPS for server, in format [-s]",
 		&v.enableHTTPS,
+	)
+
+	registerFlag(
+		flagConfigFile,
+		"the name of config file, in format [filename]",
+		&v.configFilePath,
 	)
 
 	flag.Parse()

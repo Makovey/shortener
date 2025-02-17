@@ -489,7 +489,7 @@ jobs:
           github.head_ref == 'iter23' ||
           github.head_ref == 'iter24'
         run: |
-          shortenertestbeta -test.v -test.run=^TestIteration18$ \
+          shortenertestbeta -test.v -test.run=^TestIteration19$ \
               -source-path=. \
 
       - name: "Code increment #20"
@@ -501,7 +501,7 @@ jobs:
           github.head_ref == 'iter23' ||
           github.head_ref == 'iter24'
         run: |
-          shortenertestbeta -test.v -test.run=^TestIteration18$ \
+          shortenertestbeta -test.v -test.run=^TestIteration20$ \
               -source-path=. \
 
       - name: "Code increment #21"
@@ -512,5 +512,15 @@ jobs:
           github.head_ref == 'iter23' ||
           github.head_ref == 'iter24'
         run: |
-          shortenertestbeta -test.v -test.run=^TestIteration18$ \
+          shortenertestbeta -test.v -test.run=^TestIteration21$ \
+              -source-path=. \
+
+      - name: "Code increment #22"
+        if: |
+          github.ref == 'refs/heads/main' ||
+          github.head_ref == 'iter22' ||
+          github.head_ref == 'iter23' ||
+          github.head_ref == 'iter24'
+        run: |
+          shortenertestbeta -test.v -test.run=^TestIteration22$ \
               -source-path=. \

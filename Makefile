@@ -21,7 +21,7 @@ mig-d:
 
 remote_all_tests:
 	go build -o cmd/shortener/${BINARY_NAME} cmd/shortener/*.go;
-	@for i in $(shell seq 1 21); do \
+	@for i in $(shell seq 1 22); do \
 		./shortenertest -test.v -test.run=^TestIteration$$i$$ \
 		-source-path=. \
 		-server-port=8080 \

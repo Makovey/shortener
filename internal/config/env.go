@@ -12,6 +12,7 @@ type envConfig struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	DatabaseDSN     string `env:"DATABASE_DSN"`
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS"`
+	ConfigFilePath  string `env:"CONFIG"`
 }
 
 func newEnvConfig() envConfig {

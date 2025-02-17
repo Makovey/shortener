@@ -32,3 +32,8 @@ func (c *configDummy) EnableHTTPS() bool {
 func (c *configDummy) Addr() string {
 	return ":8080"
 }
+
+// ConfigFile имя файла с конфигом
+func (c *configDummy) ConfigFile() string {
+	return "config"
+}
