@@ -43,7 +43,7 @@ func NewApp(
 
 // Run запуск всех процессов, которыми владеет App.
 func (a *App) Run() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stop()
 
 	a.runHTTPServer(ctx)
