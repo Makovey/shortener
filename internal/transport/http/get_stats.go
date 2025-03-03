@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// GetStats хендлер /api/internal/stats
+// Отдает статистику по сервису
 func (h handler) GetStats(w http.ResponseWriter, r *http.Request) {
 	fn := "http.GetStats"
 

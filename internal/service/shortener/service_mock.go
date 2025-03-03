@@ -99,6 +99,7 @@ func (m *MockService) DeleteUsersURLs(ctx context.Context, userID string, shortU
 	return nil
 }
 
+// GetStats мок для получения статистики
 func (m *MockService) GetStats(ctx context.Context) (comModel.Stats, error) {
 	if m.returnedError != nil {
 		return comModel.Stats{}, m.returnedError
