@@ -11,4 +11,5 @@ type HTTPHandler interface {
 	PostBatch(w http.ResponseWriter, r *http.Request)
 	GetAllURLS(w http.ResponseWriter, r *http.Request)
 	DeleteURLS(w http.ResponseWriter, r *http.Request)
+	GetStats(w http.ResponseWriter, r *http.Request)
 }

@@ -17,13 +17,14 @@ import (
 
 // Repository основной интерфейс для репозитория, отвечает за хранение данных
 //
-//go:generate mockgen -source=service.go -destination=../../repository/mocks/repository_mock.go -package=mocks
+//go:generate mockgen -source=service.go -destination=../../repository/mock/repository_mock.go -package=mocks
 type Repository interface {
 	SaveUserURL(ctx context.Context, shortURL, longURL, userID string) error
 	GetFullURL(ctx context.Context, shortURL, userID string) (*repoModel.UserURL, error)
 	SaveUserURLs(ctx context.Context, models []comModel.ShortenBatch, userID string) error
 	GetUserURLs(ctx context.Context, userID string) ([]comModel.ShortenBatch, error)
 	MarkURLAsDeleted(ctx context.Context, userID string, url string) error
+	GetStats(ctx context.Context) (comModel.Stats, error)
 }
 
 // Service он же useCase, слой отвечающий за бизнес-логику приложения
@@ -144,6 +145,18 @@ func (s *Service) DeleteUsersURLs(ctx context.Context, userID string, shortURLs 
 	}
 
 	return errors
+}
+
+// GetStats метод получения статистики
+func (s *Service) GetStats(ctx context.Context) (comModel.Stats, error) {
+	fn := "shortener.GetStats"
+
+	m, err := s.repo.GetStats(ctx)
+	if err != nil {
+		return comModel.Stats{}, fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return m, nil
 }
 
 // CheckPing метод по пингу репозитрия

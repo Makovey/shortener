@@ -33,5 +33,10 @@ func (a *App) initRouter() http.Handler {
 		r.Delete("/user/urls", a.handler.DeleteURLS)
 	})
 
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.NewTrustedMiddleware(a.cfg.TrustedSubnet()).CheckSubnetMiddleware)
+		r.Get("/api/internal/stats", a.handler.GetStats)
+	})
+
 	return r
 }

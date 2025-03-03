@@ -59,3 +59,21 @@ func (r *Repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenB
 
 	return models, nil
 }
+
+// GetStats возвращает стистику по сервису, количество пользователей и сокращенных адресов
+func (r *Repo) GetStats(ctx context.Context) (model.Stats, error) {
+	fn := "postgres.GetStats"
+
+	row := r.db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(DISTINCT shortener.owner_user_id) AS "users", COUNT(DISTINCT shortener.short_url) as "urls" FROM shortener`,
+	)
+
+	var stats model.Stats
+	err := row.Scan(&stats.URLS, &stats.Users)
+	if err != nil {
+		return model.Stats{}, fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return stats, nil
+}

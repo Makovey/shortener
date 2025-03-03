@@ -13,6 +13,7 @@ type envConfig struct {
 	DatabaseDSN     string `env:"DATABASE_DSN"`
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS"`
 	ConfigFilePath  string `env:"CONFIG"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
 }
 
 func newEnvConfig() envConfig {

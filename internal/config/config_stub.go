@@ -37,3 +37,8 @@ func (c *configDummy) Addr() string {
 func (c *configDummy) ConfigFile() string {
 	return "config"
 }
+
+// TrustedSubnet стаба для допускаемой подсети
+func (c *configDummy) TrustedSubnet() string {
+	return ""
+}

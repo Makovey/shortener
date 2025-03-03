@@ -533,3 +533,11 @@ jobs:
         run: |
           shortenertestbeta -test.v -test.run=^TestIteration23$ \
               -source-path=. \
+
+      - name: "Code increment #24"
+        if: |
+          github.ref == 'refs/heads/main' ||
+          github.head_ref == 'iter24'
+        run: |
+          shortenertestbeta -test.v -test.run=^TestIteration24$ \
+              -source-path=. \

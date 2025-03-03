@@ -22,6 +22,7 @@ type Service interface {
 	ShortBatch(ctx context.Context, batch []model.ShortenBatchRequest, userID string) ([]model.ShortenBatchResponse, error)
 	GetAllURLs(ctx context.Context, userID string) ([]comModel.ShortenBatch, error)
 	DeleteUsersURLs(ctx context.Context, userID string, shortURLs []string) []error
+	GetStats(ctx context.Context) (comModel.Stats, error)
 }
 
 type handler struct {
