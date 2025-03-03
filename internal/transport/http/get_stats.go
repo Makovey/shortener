@@ -5,10 +5,8 @@ import (
 	"net/http"
 )
 
-// GetAllURLS хендлер /api/user/urls
-// Возвращает список урлов юзера
-func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
-	fn := "http.GetAllURLS"
+func (h handler) GetStats(w http.ResponseWriter, r *http.Request) {
+	fn := "http.GetStats"
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == "" || len(userID) != uuidLength {
@@ -16,17 +14,12 @@ func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models, err := h.service.GetAllURLs(r.Context(), userID)
+	model, err := h.service.GetStats(r.Context())
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("[%s]: %v", fn, err))
 		h.writeResponseWithError(w, http.StatusBadRequest, "internal server error")
 		return
 	}
 
-	if len(models) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	h.writeResponse(w, http.StatusOK, models)
+	h.writeResponse(w, http.StatusOK, model)
 }

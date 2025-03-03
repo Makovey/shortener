@@ -17,6 +17,7 @@ type Config interface {
 	DatabaseDSN() string     // data source string for sql.DB
 	EnableHTTPS() bool       // enabled https
 	ConfigFile() string      // name of config file
+	TrustedSubnet() string   // returned trusted subnets for handler
 }
 
 // Настройки по-умолчанию
@@ -32,6 +33,7 @@ type config struct {
 	databaseDSN     string
 	enableHTTPS     bool
 	configFile      string
+	trustedSubnet   string
 }
 
 // NewConfig конструктор Config
@@ -87,6 +89,11 @@ func (cfg config) EnableHTTPS() bool {
 // ConfigFile - путь до файла конфигурации
 func (cfg config) ConfigFile() string {
 	return cfg.fileStoragePath
+}
+
+// TrustedSubnet - подсеть с которой разрешено получать стату
+func (cfg config) TrustedSubnet() string {
+	return cfg.trustedSubnet
 }
 
 func resolveValue(envValue, flagValue, fileValue, defaultValue string) string {

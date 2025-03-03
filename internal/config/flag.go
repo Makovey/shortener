@@ -11,6 +11,7 @@ const (
 	flagDatabaseDSN     = "d"
 	flagEnableHTTPS     = "s"
 	flagConfigFile      = "c"
+	flagTrustedSubnet   = "t"
 )
 
 type flagsValue struct {
@@ -20,6 +21,7 @@ type flagsValue struct {
 	databaseDSN     string
 	enableHTTPS     bool
 	configFilePath  string
+	trustedSubnet   string
 }
 
 func newFlagsValue() flagsValue {
@@ -64,6 +66,12 @@ func (v *flagsValue) parseFlagsIfNeeded() {
 		flagConfigFile,
 		"the name of config file, in format [filename]",
 		&v.configFilePath,
+	)
+
+	registerFlag(
+		flagTrustedSubnet,
+		"trusted subnet for handler [filename]",
+		&v.trustedSubnet,
 	)
 
 	flag.Parse()
