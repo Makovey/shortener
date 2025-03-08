@@ -6,6 +6,7 @@ import (
 	"io"
 	syslog "log"
 
+	"github.com/Makovey/shortener/internal/api/service_info"
 	"github.com/Makovey/shortener/internal/app"
 	"github.com/Makovey/shortener/internal/closer"
 	"github.com/Makovey/shortener/internal/config"
@@ -31,17 +32,21 @@ func main() {
 
 	repo := assembleRepo(cfg, log, closers)
 	pinger := assemblePinger(repo, cfg, log, closers)
+	checker := shortener.NewChecker(pinger)
 
 	handler := transport.NewHTTPHandler(
 		shortener.NewShortenerService(repo, cfg, log),
 		log,
-		shortener.NewChecker(pinger),
+		checker,
 	)
+
+	infoServer := service_info.NewInfoServer(log, checker)
 
 	appl := app.NewApp(
 		log,
 		cfg,
 		handler,
+		infoServer,
 	)
 
 	log.Debug(fmt.Sprintf("Build version: %s", buildVersion))

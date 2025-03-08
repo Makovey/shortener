@@ -43,12 +43,12 @@ func (r *Repo) GetStats(ctx context.Context) (model.Stats, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	users := make(map[string]bool)
-	shortURLs := make(map[string]bool)
+	users := make(map[string]struct{})
+	shortURLs := make(map[string]struct{})
 
 	for _, row := range r.storage {
-		users[row.userID] = true
-		shortURLs[row.shortURL] = true
+		users[row.userID] = struct{}{}
+		shortURLs[row.shortURL] = struct{}{}
 	}
 
 	return model.Stats{Users: len(users), URLS: len(shortURLs)}, nil

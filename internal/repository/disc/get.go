@@ -91,12 +91,12 @@ func (r *Repo) GetStats(ctx context.Context) (model.Stats, error) {
 		return model.Stats{}, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	users := make(map[string]bool)
-	shortURLs := make(map[string]bool)
+	users := make(map[string]struct{})
+	shortURLs := make(map[string]struct{})
 
 	for _, u := range models {
-		users[u.OwnerID] = true
-		shortURLs[u.ShortURL] = true
+		users[u.OwnerID] = struct{}{}
+		shortURLs[u.ShortURL] = struct{}{}
 	}
 
 	return model.Stats{Users: len(users), URLS: len(shortURLs)}, nil

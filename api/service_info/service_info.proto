@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package service_info;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/Makovey/internal/generated/service_info";
+
+service ServiceInfo {
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

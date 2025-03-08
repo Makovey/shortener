@@ -25,3 +25,6 @@ vendor/
 
 # Temp files
 urls.txt
+
+# Generated files
+internal/generated
