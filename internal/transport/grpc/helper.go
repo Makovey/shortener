@@ -10,6 +10,7 @@ const (
 	uuidLength          = 36
 	ReloginAndTryAgain  = "please, relogin again, to get access to this resource"
 	InternalServerError = "internal server error"
+	BadRequest          = "bad request"
 )
 
 func GetUserIDFromContext(ctx context.Context) (string, error) {

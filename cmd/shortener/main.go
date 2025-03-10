@@ -16,6 +16,7 @@ import (
 	"github.com/Makovey/shortener/internal/repository/postgres"
 	"github.com/Makovey/shortener/internal/service/shortener"
 	"github.com/Makovey/shortener/internal/transport/grpc/service_info"
+	shortener_server "github.com/Makovey/shortener/internal/transport/grpc/shortener"
 	transport "github.com/Makovey/shortener/internal/transport/http"
 )
 
@@ -42,12 +43,14 @@ func main() {
 	)
 
 	infoServer := service_info.NewInfoServer(log, checker, service)
+	shortenerServer := shortener_server.NewServer(log, service)
 
 	appl := app.NewApp(
 		log,
 		cfg,
 		handler,
 		infoServer,
+		shortenerServer,
 	)
 
 	log.Debug(fmt.Sprintf("Build version: %s", buildVersion))

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package url;
+
+option go_package = "github.com/Makovey/internal/generated/shortener";
+
+service Shortener {
+  rpc PostURL(PostURLRequest) returns (PostURLResponse);
+  rpc GetURL(GetURLRequest) returns (GetURLResponse);
+}
+
+message PostURLRequest {
+  string long_url = 1;
+}
+
+message PostURLResponse {
+  string full_short_url = 1;
+}
+
+message GetURLRequest {
+  string short_url = 1;
+}
+
+message GetURLResponse {
+  string long_url = 1;
+}

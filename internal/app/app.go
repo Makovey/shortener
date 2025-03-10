@@ -20,20 +20,23 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/Makovey/shortener/internal/config"
-	proto "github.com/Makovey/shortener/internal/generated/service_info"
+	protoInfo "github.com/Makovey/shortener/internal/generated/service_info"
+	protoShortener "github.com/Makovey/shortener/internal/generated/shortener"
 	"github.com/Makovey/shortener/internal/interceptor"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/middleware/utils"
 	"github.com/Makovey/shortener/internal/transport"
 	"github.com/Makovey/shortener/internal/transport/grpc/service_info"
+	"github.com/Makovey/shortener/internal/transport/grpc/shortener"
 )
 
 // App содержит в себе зависимости, необходимоые для запуска веб-сервера и его корректной работы.
 type App struct {
-	log        logger.Logger         // для логирования дополнительной информации
-	cfg        config.Config         // конфиг, в котором лежит адрес, на котором будет запущен сервер
-	handler    transport.HTTPHandler // хэндлеры HTTP-запросов
-	infoServer *service_info.InfoServer
+	log             logger.Logger         // для логирования дополнительной информации
+	cfg             config.Config         // конфиг, в котором лежит адрес, на котором будет запущен сервер
+	handler         transport.HTTPHandler // хэндлеры HTTP-запросов
+	infoServer      *service_info.InfoServer
+	shortenerServer *shortener.Server
 }
 
 // NewApp конструктор App
@@ -42,12 +45,14 @@ func NewApp(
 	cfg config.Config,
 	handler transport.HTTPHandler,
 	infoServer *service_info.InfoServer,
+	shortenerServer *shortener.Server,
 ) *App {
 	return &App{
-		log:        log,
-		cfg:        cfg,
-		handler:    handler,
-		infoServer: infoServer,
+		log:             log,
+		cfg:             cfg,
+		handler:         handler,
+		infoServer:      infoServer,
+		shortenerServer: shortenerServer,
 	}
 }
 
@@ -142,7 +147,8 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 	)
 
 	reflection.Register(s)
-	proto.RegisterServiceInfoServer(s, a.infoServer)
+	protoInfo.RegisterServiceInfoServer(s, a.infoServer)
+	protoShortener.RegisterShortenerServer(s, a.shortenerServer)
 
 	a.log.Info(fmt.Sprintf("[%s]: starting grpc server on: %s", fn, port))
 

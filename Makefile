@@ -49,3 +49,10 @@ generate-service_info-api:
 	--go_out=internal/generated/service_info/ --go_opt=paths=source_relative \
 	--go-grpc_out=internal/generated/service_info/ --go-grpc_opt=paths=source_relative \
 	api/service_info/service_info.proto
+
+generate-shortener-api:
+	mkdir -p internal/generated/shortener/
+	protoc --proto_path api/shortener \
+	--go_out=internal/generated/shortener/ --go_opt=paths=source_relative \
+	--go-grpc_out=internal/generated/shortener/ --go-grpc_opt=paths=source_relative \
+	api/shortener/shortener.proto
