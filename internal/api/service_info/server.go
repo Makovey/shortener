@@ -6,6 +6,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/http"
 )
 
+// InfoServer сервер для утилитарных хендлеров
 type InfoServer struct {
 	proto.UnimplementedServiceInfoServer
 
@@ -13,6 +14,7 @@ type InfoServer struct {
 	checker http.Checker
 }
 
+// NewInfoServer констурктор InfoServer
 func NewInfoServer(
 	log logger.Logger,
 	checker http.Checker,

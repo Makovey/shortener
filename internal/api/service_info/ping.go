@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+// Ping grpc хендлер /ping
 func (s *InfoServer) Ping(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
 	fn := "service_info.Ping"
 

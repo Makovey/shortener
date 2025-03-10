@@ -34,7 +34,7 @@ func (a *App) initRouter() http.Handler {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.NewTrustedMiddleware(a.cfg.TrustedSubnet()).CheckSubnetMiddleware)
+		r.Use(middleware.NewTruster(a.cfg.TrustedSubnet()).CheckSubnet)
 		r.Get("/api/internal/stats", a.handler.GetStats)
 	})
 

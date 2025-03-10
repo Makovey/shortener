@@ -16,12 +16,15 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/Makovey/shortener/internal/api/service_info"
 	"github.com/Makovey/shortener/internal/config"
 	proto "github.com/Makovey/shortener/internal/generated/service_info"
+	"github.com/Makovey/shortener/internal/interceptor"
 	"github.com/Makovey/shortener/internal/logger"
+	"github.com/Makovey/shortener/internal/middleware/utils"
 	"github.com/Makovey/shortener/internal/transport"
 )
 
@@ -127,7 +130,15 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 		return
 	}
 
-	s := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	s := grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.ChainUnaryInterceptor( // TODO: вынести создание перехватчиков
+			interceptor.Logger(a.log),
+			interceptor.JWTAuth(a.log, utils.NewJWTUtils(a.log)),
+			interceptor.CheckSubnet(a.cfg.TrustedSubnet()),
+		),
+	)
+
 	reflection.Register(s)
 	proto.RegisterServiceInfoServer(s, a.infoServer)
 

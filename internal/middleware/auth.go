@@ -40,7 +40,7 @@ func NewAuthHandler(
 // Проверяет в куках наличие JWT токена и проверяет его на валидность
 func (j AuthHandler) AuthHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		f := "jwt.AuthHandler:"
+		f := "jwt.AuthHandler"
 		var isCookieAbsent bool
 		var userID string
 
