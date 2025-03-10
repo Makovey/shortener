@@ -6,7 +6,6 @@ import (
 	"io"
 	syslog "log"
 
-	"github.com/Makovey/shortener/internal/api/service_info"
 	"github.com/Makovey/shortener/internal/app"
 	"github.com/Makovey/shortener/internal/closer"
 	"github.com/Makovey/shortener/internal/config"
@@ -16,6 +15,7 @@ import (
 	"github.com/Makovey/shortener/internal/repository/inmemory"
 	"github.com/Makovey/shortener/internal/repository/postgres"
 	"github.com/Makovey/shortener/internal/service/shortener"
+	"github.com/Makovey/shortener/internal/transport/grpc/service_info"
 	transport "github.com/Makovey/shortener/internal/transport/http"
 )
 
@@ -33,14 +33,15 @@ func main() {
 	repo := assembleRepo(cfg, log, closers)
 	pinger := assemblePinger(repo, cfg, log, closers)
 	checker := shortener.NewChecker(pinger)
+	service := shortener.NewShortenerService(repo, cfg, log)
 
 	handler := transport.NewHTTPHandler(
-		shortener.NewShortenerService(repo, cfg, log),
+		service,
 		log,
 		checker,
 	)
 
-	infoServer := service_info.NewInfoServer(log, checker)
+	infoServer := service_info.NewInfoServer(log, checker, service)
 
 	appl := app.NewApp(
 		log,

@@ -15,7 +15,13 @@ import (
 	"github.com/Makovey/shortener/internal/middleware/utils"
 )
 
-const jwtMetaName = "jwt"
+// Key отдельный тип для ключа используемый контекстом, во избежание коллизий
+type Key string
+
+const (
+	jwtMetaName      = "jwt"
+	CtxUserIDKey Key = "UserID"
+)
 
 // JWTAuth проверяет наличие JWT, устанавливает новый, если необходимо
 func JWTAuth(
@@ -60,6 +66,7 @@ func JWTAuth(
 			metadata.AppendToOutgoingContext(ctx, jwtMetaName, tokenString)
 		}
 
+		ctx = context.WithValue(ctx, CtxUserIDKey, userID)
 		return handler(ctx, req)
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/Makovey/shortener/internal/transport/grpc"
 )
 
 // Ping grpc хендлер /ping
@@ -16,7 +18,7 @@ func (s *InfoServer) Ping(ctx context.Context, empty *emptypb.Empty) (*emptypb.E
 	err := s.checker.CheckPing(ctx)
 	if err != nil {
 		s.log.Error(fmt.Sprintf("[%s]: %s", fn, err.Error()))
-		return &emptypb.Empty{}, status.Error(codes.Internal, "internal server error")
+		return &emptypb.Empty{}, status.Error(codes.Internal, grpc.InternalServerError)
 	}
 
 	return &emptypb.Empty{}, nil

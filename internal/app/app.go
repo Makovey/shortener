@@ -19,13 +19,13 @@ import (
 	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/Makovey/shortener/internal/api/service_info"
 	"github.com/Makovey/shortener/internal/config"
 	proto "github.com/Makovey/shortener/internal/generated/service_info"
 	"github.com/Makovey/shortener/internal/interceptor"
 	"github.com/Makovey/shortener/internal/logger"
 	"github.com/Makovey/shortener/internal/middleware/utils"
 	"github.com/Makovey/shortener/internal/transport"
+	"github.com/Makovey/shortener/internal/transport/grpc/service_info"
 )
 
 // App содержит в себе зависимости, необходимоые для запуска веб-сервера и его корректной работы.
@@ -135,7 +135,9 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 		grpc.ChainUnaryInterceptor( // TODO: вынести создание перехватчиков
 			interceptor.Logger(a.log),
 			interceptor.JWTAuth(a.log, utils.NewJWTUtils(a.log)),
-			interceptor.CheckSubnet(a.cfg.TrustedSubnet()),
+			interceptor.CheckSubnet(a.cfg.TrustedSubnet(), []string{
+				"Stats",
+			}),
 		),
 	)
 
