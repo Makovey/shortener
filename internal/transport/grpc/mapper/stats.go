@@ -1,4 +1,4 @@
-package model_mapper
+package mapper
 
 import (
 	"github.com/Makovey/shortener/internal/generated/service_info"

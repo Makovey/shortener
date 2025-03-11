@@ -14,6 +14,7 @@ type envConfig struct {
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS"`
 	ConfigFilePath  string `env:"CONFIG"`
 	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
+	GRPCPort        string `env:"GRPC_PORT"`
 }
 
 func newEnvConfig() envConfig {

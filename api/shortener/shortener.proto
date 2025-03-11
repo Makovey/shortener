@@ -2,11 +2,17 @@ syntax = "proto3";
 
 package url;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "github.com/Makovey/internal/generated/shortener";
 
 service Shortener {
   rpc PostURL(PostURLRequest) returns (PostURLResponse);
   rpc GetURL(GetURLRequest) returns (GetURLResponse);
+  rpc PostURLV2(PostURLRequestV2) returns (PostURLResponseV2);
+  rpc PostBatchURL(PostBatchURLRequest) returns (PostBatchURLResponse);
+  rpc GetUserURLs(google.protobuf.Empty) returns (GetUserURLsResponse);
+  rpc DeleteUserURLs(DeleteUserURLsRequest) returns (google.protobuf.Empty);
 }
 
 message PostURLRequest {
@@ -23,4 +29,44 @@ message GetURLRequest {
 
 message GetURLResponse {
   string long_url = 1;
+}
+
+message PostURLRequestV2 {
+  string url = 1;
+}
+
+message PostURLResponseV2 {
+  string result = 1;
+}
+
+message PostBatchURLRequest {
+  repeated BatchURLRequest batch = 1;
+}
+
+message PostBatchURLResponse {
+  repeated BatchURLResponse batch = 2;
+}
+
+message BatchURLRequest {
+  string correlationID = 1;
+  string originalURL = 2;
+}
+
+message BatchURLResponse {
+  string correlationID = 1;
+  string shortURL = 2;
+}
+
+message GetUserURLsResponse {
+  repeated UserURL userURLs = 1;
+}
+
+message UserURL {
+  string correlationID = 1;
+  string originalURL = 2;
+  string shortURL = 3;
+}
+
+message DeleteUserURLsRequest {
+  repeated string shortURLs = 1;
 }

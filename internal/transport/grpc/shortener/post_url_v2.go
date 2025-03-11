@@ -11,19 +11,19 @@ import (
 	"github.com/Makovey/shortener/internal/transport/grpc"
 )
 
-func (s *Server) PostURL(ctx context.Context, req *shortener.PostURLRequest) (*shortener.PostURLResponse, error) {
-	fn := "shortener.PostURL"
+func (s *Server) PostURLV2(ctx context.Context, req *shortener.PostURLRequestV2) (*shortener.PostURLResponseV2, error) {
+	fn := "shortener.PostURLV2"
 
 	userID, err := grpc.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Aborted, grpc.ReloginAndTryAgain)
 	}
 
-	url, err := s.service.CreateShortURL(ctx, req.GetLongUrl(), userID)
+	url, err := s.service.CreateShortURL(ctx, req.GetUrl(), userID)
 	if err != nil {
 		s.log.Error(fmt.Sprintf("[%s]: %v", fn, err))
 		return nil, status.Error(codes.Internal, grpc.InternalServerError)
 	}
 
-	return &shortener.PostURLResponse{FullShortUrl: url}, nil
+	return &shortener.PostURLResponseV2{Result: url}, nil
 }

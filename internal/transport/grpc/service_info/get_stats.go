@@ -10,11 +10,11 @@ import (
 
 	proto "github.com/Makovey/shortener/internal/generated/service_info"
 	"github.com/Makovey/shortener/internal/transport/grpc"
-	"github.com/Makovey/shortener/internal/transport/grpc/model_mapper"
+	"github.com/Makovey/shortener/internal/transport/grpc/mapper"
 )
 
 // Stats предоставляет статистику по сервису
-func (s *InfoServer) Stats(ctx context.Context, empty *emptypb.Empty) (*proto.StatsResponse, error) {
+func (s *InfoServer) Stats(ctx context.Context, req *emptypb.Empty) (*proto.StatsResponse, error) {
 	fn := "service_info.GetStats"
 
 	_, err := grpc.GetUserIDFromContext(ctx)
@@ -28,5 +28,5 @@ func (s *InfoServer) Stats(ctx context.Context, empty *emptypb.Empty) (*proto.St
 		return nil, status.Error(codes.Internal, grpc.InternalServerError)
 	}
 
-	return model_mapper.ToProtoFromStats(&model), nil
+	return mapper.ToProtoFromStats(&model), nil
 }

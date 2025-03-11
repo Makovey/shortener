@@ -42,3 +42,8 @@ func (c *configDummy) ConfigFile() string {
 func (c *configDummy) TrustedSubnet() string {
 	return ""
 }
+
+// GRPCPort стаба для порта GRPC
+func (c *configDummy) GRPCPort() string {
+	return ""
+}

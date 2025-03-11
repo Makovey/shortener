@@ -6,24 +6,26 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/Makovey/shortener/internal/generated/shortener"
 	"github.com/Makovey/shortener/internal/transport/grpc"
+	"github.com/Makovey/shortener/internal/transport/grpc/mapper"
 )
 
-func (s *Server) PostURL(ctx context.Context, req *shortener.PostURLRequest) (*shortener.PostURLResponse, error) {
-	fn := "shortener.PostURL"
+func (s *Server) GetUserURLs(ctx context.Context, req *emptypb.Empty) (*shortener.GetUserURLsResponse, error) {
+	fn := "shortener.GetUserURLs"
 
 	userID, err := grpc.GetUserIDFromContext(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Aborted, grpc.ReloginAndTryAgain)
+		return nil, status.Error(codes.Unauthenticated, grpc.ReloginAndTryAgain)
 	}
 
-	url, err := s.service.CreateShortURL(ctx, req.GetLongUrl(), userID)
+	models, err := s.service.GetAllURLs(ctx, userID)
 	if err != nil {
 		s.log.Error(fmt.Sprintf("[%s]: %v", fn, err))
 		return nil, status.Error(codes.Internal, grpc.InternalServerError)
 	}
 
-	return &shortener.PostURLResponse{FullShortUrl: url}, nil
+	return mapper.FromBatchToGetUserURLsResponse(models), nil
 }

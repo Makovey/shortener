@@ -63,7 +63,10 @@ func JWTAuth(
 				return nil, status.Error(codes.Internal, "internal server error")
 			}
 
-			metadata.AppendToOutgoingContext(ctx, jwtMetaName, tokenString)
+			err = grpc.SetHeader(ctx, metadata.Pairs(jwtMetaName, tokenString))
+			if err != nil {
+				return nil, status.Error(codes.Internal, "internal server error")
+			}
 		}
 
 		ctx = context.WithValue(ctx, CtxUserIDKey, userID)

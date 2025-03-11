@@ -18,12 +18,14 @@ type Config interface {
 	EnableHTTPS() bool       // enabled https
 	ConfigFile() string      // name of config file
 	TrustedSubnet() string   // returned trusted subnets for handler
+	GRPCPort() string        // return port to launch grpc
 }
 
 // Настройки по-умолчанию
 const (
-	defaultAddr    = "localhost:8080"        // запуск сервера
-	defaultBaseURL = "http://localhost:8080" // возвращаемый base url для ответа некоторых ручек
+	defaultAddr     = "localhost:8080"        // запуск сервера
+	defaultBaseURL  = "http://localhost:8080" // возвращаемый base url для ответа некоторых ручек
+	defaultGRPCPort = ":9091"
 )
 
 type config struct {
@@ -34,6 +36,7 @@ type config struct {
 	enableHTTPS     bool
 	configFile      string
 	trustedSubnet   string
+	grpcPort        string
 }
 
 // NewConfig конструктор Config
@@ -50,6 +53,7 @@ func NewConfig(
 		fileStoragePath: resolveValue(envCfg.FileStoragePath, flags.fileStoragePath, file.FileStoragePath, ""),
 		databaseDSN:     resolveDatabaseURI(envCfg.DatabaseDSN, flags.databaseDSN, file.DatabaseDSN),
 		enableHTTPS:     resolveBoolValue(envCfg.EnableHTTPS, flags.enableHTTPS, file.EnableHTTPS),
+		grpcPort:        resolveValue(envCfg.GRPCPort, flags.grpcPort, file.GRPCPort, defaultGRPCPort),
 	}
 
 	log.Debug("Addr: " + cfg.addr)
@@ -57,6 +61,7 @@ func NewConfig(
 	log.Debug("FileStoragePath: " + cfg.fileStoragePath)
 	log.Debug("DatabaseDSN: " + cfg.databaseDSN)
 	log.Debug("EnableHTTPS: " + strconv.FormatBool(cfg.enableHTTPS))
+	log.Debug("gRPC port: " + cfg.grpcPort)
 
 	return cfg
 }
@@ -94,6 +99,11 @@ func (cfg config) ConfigFile() string {
 // TrustedSubnet - подсеть с которой разрешено получать стату
 func (cfg config) TrustedSubnet() string {
 	return cfg.trustedSubnet
+}
+
+// GRPCPort - порт для запуска GRPC сервера
+func (cfg config) GRPCPort() string {
+	return cfg.grpcPort
 }
 
 func resolveValue(envValue, flagValue, fileValue, defaultValue string) string {

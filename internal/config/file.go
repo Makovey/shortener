@@ -12,6 +12,7 @@ type jsonConfig struct {
 	DatabaseDSN     string `json:"database_dsn"`
 	EnableHTTPS     bool   `json:"enable_https"`
 	TrustedSubnet   string `json:"trusted_subnet"`
+	GRPCPort        string `json:"grpc_port"`
 }
 
 func newJSONFileConfig(filePath string) jsonConfig {

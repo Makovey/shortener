@@ -12,6 +12,7 @@ const (
 	flagEnableHTTPS     = "s"
 	flagConfigFile      = "c"
 	flagTrustedSubnet   = "t"
+	flagGRPCPort        = "g"
 )
 
 type flagsValue struct {
@@ -22,6 +23,7 @@ type flagsValue struct {
 	enableHTTPS     bool
 	configFilePath  string
 	trustedSubnet   string
+	grpcPort        string
 }
 
 func newFlagsValue() flagsValue {
@@ -72,6 +74,12 @@ func (v *flagsValue) parseFlagsIfNeeded() {
 		flagTrustedSubnet,
 		"trusted subnet for handler [filename]",
 		&v.trustedSubnet,
+	)
+
+	registerFlag(
+		flagGRPCPort,
+		"gRPC port for launch server, in format [:port]",
+		&v.grpcPort,
 	)
 
 	flag.Parse()

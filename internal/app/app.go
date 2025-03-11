@@ -127,9 +127,7 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	port := ":9001"
-
-	listen, err := net.Listen("tcp", port) // TODO: to config
+	listen, err := net.Listen("tcp", a.cfg.GRPCPort())
 	if err != nil {
 		a.log.Error(fmt.Sprintf("[%s]: failed to listen: %s", fn, err.Error()))
 		return
@@ -137,7 +135,7 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 
 	s := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.ChainUnaryInterceptor( // TODO: вынести создание перехватчиков
+		grpc.ChainUnaryInterceptor(
 			interceptor.Logger(a.log),
 			interceptor.JWTAuth(a.log, utils.NewJWTUtils(a.log)),
 			interceptor.CheckSubnet(a.cfg.TrustedSubnet(), []string{
@@ -150,7 +148,7 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 	protoInfo.RegisterServiceInfoServer(s, a.infoServer)
 	protoShortener.RegisterShortenerServer(s, a.shortenerServer)
 
-	a.log.Info(fmt.Sprintf("[%s]: starting grpc server on: %s", fn, port))
+	a.log.Info(fmt.Sprintf("[%s]: starting grpc server on: %s", fn, a.cfg.GRPCPort()))
 
 	go func() {
 		if err = s.Serve(listen); err != nil {
