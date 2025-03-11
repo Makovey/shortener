@@ -6,6 +6,7 @@ import (
 	transportModel "github.com/Makovey/shortener/internal/transport/model"
 )
 
+// FromBatchProtoToBatchRequest хелпер, маппинг модели из прото формата в обычный
 func FromBatchProtoToBatchRequest(proto *shortener.PostBatchURLRequest) []transportModel.ShortenBatchRequest {
 	var batch []transportModel.ShortenBatchRequest
 
@@ -19,6 +20,7 @@ func FromBatchProtoToBatchRequest(proto *shortener.PostBatchURLRequest) []transp
 	return batch
 }
 
+// FromBatchRequestToPostBatchProto хелпер, маппинг модели из обычного формата в прото
 func FromBatchRequestToPostBatchProto(models *[]transportModel.ShortenBatchResponse) *shortener.PostBatchURLResponse {
 	var batch []*shortener.BatchURLResponse
 
@@ -32,6 +34,7 @@ func FromBatchRequestToPostBatchProto(models *[]transportModel.ShortenBatchRespo
 	return &shortener.PostBatchURLResponse{Batch: batch}
 }
 
+// FromBatchRequestToPostBatchProto хелпер, маппинг модели из обычного формата в прото
 func FromBatchToGetUserURLsResponse(models []model.ShortenBatch) *shortener.GetUserURLsResponse {
 	var urls []*shortener.UserURL
 

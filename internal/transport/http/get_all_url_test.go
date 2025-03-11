@@ -7,9 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	comModel "github.com/Makovey/shortener/internal/service/model"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Makovey/shortener/internal/service"
+	comModel "github.com/Makovey/shortener/internal/service/model"
 
 	"github.com/Makovey/shortener/internal/logger/stdout"
 	"github.com/Makovey/shortener/internal/middleware"
@@ -19,7 +21,7 @@ import (
 
 func TestGetAllURLSHandler(t *testing.T) {
 	type dependencies struct {
-		service Service
+		service service.Service
 	}
 
 	type want struct {

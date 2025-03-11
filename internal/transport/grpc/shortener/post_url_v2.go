@@ -11,6 +11,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/grpc"
 )
 
+// PostURLV2 - gRPC хендлер по вставке нового урла
 func (s *Server) PostURLV2(ctx context.Context, req *shortener.PostURLRequestV2) (*shortener.PostURLResponseV2, error) {
 	fn := "shortener.PostURLV2"
 

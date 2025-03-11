@@ -12,6 +12,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/grpc/mapper"
 )
 
+// PostBatchURL - gRPC хендлер по вставке новых урлов
 func (s *Server) PostBatchURL(ctx context.Context, req *shortener.PostBatchURLRequest) (*shortener.PostBatchURLResponse, error) {
 	fn := "shortener.PostBatchURL"
 

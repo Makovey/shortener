@@ -12,6 +12,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/grpc"
 )
 
+// DeleteUserURLs - gRPC хендлер по удалению урлов юзера
 func (s *Server) DeleteUserURLs(ctx context.Context, req *shortener.DeleteUserURLsRequest) (*emptypb.Empty, error) {
 	fn := "shortener.DeleteUserURLs"
 

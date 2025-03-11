@@ -15,13 +15,14 @@ import (
 	"github.com/Makovey/shortener/internal/logger/stdout"
 	"github.com/Makovey/shortener/internal/middleware"
 	"github.com/Makovey/shortener/internal/repository"
+	"github.com/Makovey/shortener/internal/service"
 	"github.com/Makovey/shortener/internal/service/mock"
 	"github.com/Makovey/shortener/internal/service/shortener"
 )
 
 func TestPostShortenHandler(t *testing.T) {
 	type dependencies struct {
-		service Service
+		service service.Service
 	}
 
 	type want struct {

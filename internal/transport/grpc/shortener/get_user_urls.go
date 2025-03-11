@@ -13,6 +13,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/grpc/mapper"
 )
 
+// GetUserURLs - gRPC хендлер по получению урлов юзера
 func (s *Server) GetUserURLs(ctx context.Context, req *emptypb.Empty) (*shortener.GetUserURLsResponse, error) {
 	fn := "shortener.GetUserURLs"
 

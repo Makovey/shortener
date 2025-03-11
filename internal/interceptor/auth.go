@@ -18,6 +18,7 @@ import (
 // Key отдельный тип для ключа используемый контекстом, во избежание коллизий
 type Key string
 
+// Ключи, по которым лежат авторизационные данные
 const (
 	jwtMetaName      = "jwt"
 	CtxUserIDKey Key = "UserID"

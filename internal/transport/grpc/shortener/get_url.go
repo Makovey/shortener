@@ -11,6 +11,7 @@ import (
 	"github.com/Makovey/shortener/internal/transport/grpc"
 )
 
+// GetURL - gRPC хендлер по получению урлов
 func (s *Server) GetURL(ctx context.Context, req *shortener.GetURLRequest) (*shortener.GetURLResponse, error) {
 	fn := "shortener.GetURL"
 
