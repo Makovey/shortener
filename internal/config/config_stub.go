@@ -37,3 +37,13 @@ func (c *configDummy) Addr() string {
 func (c *configDummy) ConfigFile() string {
 	return "config"
 }
+
+// TrustedSubnet стаба для допускаемой подсети
+func (c *configDummy) TrustedSubnet() string {
+	return ""
+}
+
+// GRPCPort стаба для порта GRPC
+func (c *configDummy) GRPCPort() string {
+	return ""
+}

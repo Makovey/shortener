@@ -18,7 +18,7 @@ jobs:
 
   shortenertest:
     runs-on: ubuntu-latest
-    container: golang:1.22
+    container: golang:1.23.4
     needs: branchtest
 
     services:
@@ -34,6 +34,10 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Set up Go 1.23.4
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.23.4'
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -532,4 +536,12 @@ jobs:
           github.head_ref == 'iter24'
         run: |
           shortenertestbeta -test.v -test.run=^TestIteration23$ \
+              -source-path=. \
+
+      - name: "Code increment #24"
+        if: |
+          github.ref == 'refs/heads/main' ||
+          github.head_ref == 'iter24'
+        run: |
+          shortenertestbeta -test.v -test.run=^TestIteration24$ \
               -source-path=. \

@@ -15,6 +15,8 @@ import (
 	"github.com/Makovey/shortener/internal/repository/inmemory"
 	"github.com/Makovey/shortener/internal/repository/postgres"
 	"github.com/Makovey/shortener/internal/service/shortener"
+	"github.com/Makovey/shortener/internal/transport/grpc/service_info"
+	shortenerserver "github.com/Makovey/shortener/internal/transport/grpc/shortener"
 	transport "github.com/Makovey/shortener/internal/transport/http"
 )
 
@@ -30,18 +32,25 @@ func main() {
 	closers := closer.NewCloser()
 
 	repo := assembleRepo(cfg, log, closers)
-	pinger := assemblePinger(repo, cfg, log, closers)
+	pinger := assemblePinger(repo, cfg, closers)
+	checker := shortener.NewChecker(pinger)
+	service := shortener.NewShortenerService(repo, cfg, log)
 
 	handler := transport.NewHTTPHandler(
-		shortener.NewShortenerService(repo, cfg, log),
+		service,
 		log,
-		shortener.NewChecker(pinger),
+		checker,
 	)
+
+	infoServer := service_info.NewInfoServer(log, checker, service)
+	shortenerServer := shortenerserver.NewServer(log, service)
 
 	appl := app.NewApp(
 		log,
 		cfg,
 		handler,
+		infoServer,
+		shortenerServer,
 	)
 
 	log.Debug(fmt.Sprintf("Build version: %s", buildVersion))
@@ -86,7 +95,6 @@ func assembleRepo(
 func assemblePinger(
 	repo shortener.Repository,
 	cfg config.Config,
-	log logger.Logger,
 	closers *closer.Closer,
 ) driver.Pinger {
 	var pinger driver.Pinger

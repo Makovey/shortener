@@ -23,7 +23,6 @@ func (h handler) GetAllURLS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Info(fmt.Sprintf("get all processed queried successfully with length: %d", len(models)))
 	if len(models) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return

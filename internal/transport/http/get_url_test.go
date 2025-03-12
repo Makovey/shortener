@@ -12,6 +12,7 @@ import (
 
 	"github.com/Makovey/shortener/internal/logger/stdout"
 	"github.com/Makovey/shortener/internal/middleware"
+	"github.com/Makovey/shortener/internal/service"
 	"github.com/Makovey/shortener/internal/service/mock"
 	"github.com/Makovey/shortener/internal/service/shortener"
 	"github.com/Makovey/shortener/internal/transport/model"
@@ -19,7 +20,7 @@ import (
 
 func TestGetURLHandler(t *testing.T) {
 	type dependencies struct {
-		service Service
+		service service.Service
 	}
 
 	type want struct {

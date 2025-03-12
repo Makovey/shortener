@@ -37,3 +37,19 @@ func (r *Repo) GetUserURLs(ctx context.Context, userID string) ([]model.ShortenB
 
 	return models, nil
 }
+
+// GetStats возвращает стистику по сервису, количество пользователей и сокращенных адресов
+func (r *Repo) GetStats(ctx context.Context) (model.Stats, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	users := make(map[string]struct{})
+	shortURLs := make(map[string]struct{})
+
+	for _, row := range r.storage {
+		users[row.userID] = struct{}{}
+		shortURLs[row.shortURL] = struct{}{}
+	}
+
+	return model.Stats{Users: len(users), URLS: len(shortURLs)}, nil
+}
